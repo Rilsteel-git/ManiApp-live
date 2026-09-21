@@ -11,6 +11,16 @@
 
 :root { --app-width: 430px }
 
+/* iOS Safari auto-zoom saat fokus ke input kalau font-size-nya < 16px.
+   Semua field teks dipaksa 16px di sini supaya tap ke field manapun
+   tidak memicu zoom (dan sisa efeknya: halaman ketinggalan ter-zoom). */
+.input input,
+.input select,
+.input textarea,
+#tx-search {
+  font-size: 16px;
+}
+
 /* ------------------------------------------------------------
    1. Aturan responsif mobile, berlaku di semua lebar layar
    ------------------------------------------------------------ */
