@@ -35,7 +35,7 @@ export function CategoriesPage() {
   const orderedList = sameSet ? order.map((id) => list.find((category) => category.id === id)!) : list;
   // Lima kategori per batch. Item lama tetap terlihat; hanya batch yang baru
   // diminta lewat scroll yang menampilkan loader Mani sebelum ditambahkan.
-  const { visible, hasMore, loading, sentinel } = useIncrementalList(orderedList.length, 5, {
+  const { visible, hasMore, loading, sentinel } = useIncrementalList(orderedList.length, 10, {
     delayMs: 800,
     resetKey: type,
     rootMargin: '0px 0px 48px 0px'
