@@ -3,7 +3,7 @@
    personal-wallet/index.html + logika render.categories().
    ============================================================ */
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import type { TransactionType } from '../types';
 import { useAppData } from '../context/AppDataContext';
 import { useUi } from '../context/UiContext';
@@ -12,15 +12,26 @@ import { txCount } from '../lib/format';
 import { Icon } from '../components/IconSprite';
 import { EmptyState, Segmented } from '../components/Ui';
 import { useDeleteCategory } from '../components/Modals';
+import { useCategoryDrag } from '../hooks/useCategoryDrag';
 
 export function CategoriesPage() {
-  const { categories, transactions, restoreCategory } = useAppData();
+  const { categories, transactions, restoreCategory, reorderCategories } = useAppData();
   const { openModal, toast } = useUi();
   const removeCategory = useDeleteCategory();
   const [type, setType] = useState<TransactionType>('expense');
 
   const list = categoriesByType(categories, type);
   const archived = categoriesByType(categories, type, { archived: true });
+
+  const handleReorder = useCallback((ids: string[]) => {
+    void reorderCategories(ids)
+      .then(() => toast('Category order updated'))
+      .catch((reason) => toast(reason instanceof Error ? reason.message : 'Could not reorder categories.', { variant: 'error' }));
+  }, [reorderCategories, toast]);
+  const activeIds = list.map((category) => category.id);
+  const { order, containerRef, draggingId } = useCategoryDrag(activeIds, handleReorder);
+  const sameSet = order.length === list.length && order.every((id) => list.some((category) => category.id === id));
+  const orderedList = sameSet ? order.map((id) => list.find((category) => category.id === id)!) : list;
 
   async function restore(id: string, name: string) {
     try {
@@ -45,13 +56,14 @@ export function CategoriesPage() {
           options={[{ value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]}
         />
         <div style={{ height: 16 }} />
-        <div className="category-list" id="categories-list">
+        <div className="category-list" id="categories-list" ref={containerRef}>
           {list.length ? (
-            list.map((category) => (
+            orderedList.map((category) => (
               <div
-                className="category-row"
+                className={`category-row${draggingId === category.id ? ' dragging' : ''}`}
                 key={category.id}
                 data-id={category.id}
+                data-drag-id={category.id}
                 tabIndex={0}
                 role="group"
                 aria-label={category.name}

@@ -98,6 +98,15 @@ export async function deleteCategory(id: string) {
   if (error) throw error;
 }
 
+/** `ids` sudah berurutan sesuai posisi baru; index-nya jadi `position`. */
+export async function reorderCategories(ids: string[]) {
+  const results = await Promise.all(
+    ids.map((id, index) => client().from('categories').update({ position: index }).eq('id', id))
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) throw failed.error;
+}
+
 export async function createTransaction(userId: string, payload: TransactionPayload) {
   const { error } = await client().from('transactions').insert({ user_id: userId, wallet_id: payload.walletId, category_id: payload.categoryId, type: payload.type, amount: payload.amount, currency: payload.currency, exchange_rate: payload.exchangeRate, note: payload.note.trim(), date: payload.date });
   if (error) throw error;

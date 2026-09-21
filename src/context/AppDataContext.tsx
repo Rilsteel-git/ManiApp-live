@@ -20,6 +20,7 @@ interface AppDataValue {
   archiveCategory: (id: string) => Promise<void>;
   restoreCategory: (id: string) => Promise<void>;
   removeCategory: (id: string) => Promise<void>;
+  reorderCategories: (ids: string[]) => Promise<void>;
   addTransaction: (payload: TransactionPayload) => Promise<void>;
   editTransaction: (id: string, payload: TransactionPayload) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
@@ -82,6 +83,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     archiveCategory: (id) => run(() => db.archiveCategory(id)),
     restoreCategory: (id) => run(() => db.restoreCategory(id)),
     removeCategory: (id) => run(() => db.deleteCategory(id)),
+    reorderCategories: (ids) => run(() => db.reorderCategories(ids)),
     addTransaction: (payload) => run(() => db.createTransaction(userId!, payload)),
     editTransaction: (id, payload) => run(() => db.updateTransaction(id, payload)),
     removeTransaction: (id) => run(() => db.deleteTransaction(id)),
