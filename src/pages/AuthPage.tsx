@@ -68,6 +68,15 @@ function PasswordField({
   );
 }
 
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateEmail(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return 'Enter your email address.';
+  if (!EMAIL_PATTERN.test(trimmed)) return 'Enter a valid email address (e.g. name@example.com).';
+  return null;
+}
+
 /** 8+ karakter, campuran huruf besar/kecil, angka, dan simbol. */
 const PASSWORD_HINT = 'At least 8 characters, with uppercase, lowercase, a number, and a special character.';
 
@@ -129,7 +138,8 @@ export function AuthPage() {
   async function submitLogin(event: React.FormEvent) {
     event.preventDefault();
     const next: Record<string, string> = {};
-    if (!email.trim()) next.email = 'Enter your email address.';
+    const emailError = validateEmail(email);
+    if (emailError) next.email = emailError;
     if (!password) next.password = 'Enter your password.';
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -149,7 +159,8 @@ export function AuthPage() {
     event.preventDefault();
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = 'Tell us what to call you.';
-    if (!email.trim()) next.email = 'Enter your email address.';
+    const emailError = validateEmail(email);
+    if (emailError) next.email = emailError;
     const passwordError = validatePassword(password);
     if (passwordError) next.password = passwordError;
     if (confirm !== password) next.confirm = 'Both passwords must match.';
