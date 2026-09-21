@@ -7,6 +7,7 @@
    ============================================================ */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import {
   addDays,
   endOfMonth,
@@ -128,7 +129,7 @@ export function RangeDatePicker({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClose(root, open, () => setOpen(false));
+  useOutsideClose(root, open, () => setOpen(false), popoverRef);
   useFloatingPopover(open, triggerRef, popoverRef, 'right');
 
   // Nilai filter dari luar (mis. tombol "Clear filters") ikut tersalin ke draft.
@@ -198,7 +199,8 @@ export function RangeDatePicker({
       >
         <Icon name="calendar" /><span className="date-label">{label}</span>
       </button>
-      <div ref={popoverRef} className="date-popover" role="dialog" aria-label="Filter by date range">
+      {open && createPortal(
+      <div ref={popoverRef} className="date-popover date-popover-portal" role="dialog" aria-label="Filter by date range">
         <div className="date-popover-head">
           <div><strong>Date range</strong><small>Pick the period you want to see</small></div>
           <button className="date-close" type="button" aria-label="Close date picker" onClick={() => setOpen(false)}>
@@ -250,7 +252,9 @@ export function RangeDatePicker({
           <button className="btn ghost" type="button" onClick={clear}>Clear</button>
           <button className="btn primary" type="button" onClick={apply}>Apply</button>
         </div>
-      </div>
+      </div>,
+      document.body
+      )}
     </div>
   );
 }
@@ -276,7 +280,7 @@ export function SingleDatePicker({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClose(root, open, () => setOpen(false));
+  useOutsideClose(root, open, () => setOpen(false), popoverRef);
   useFloatingPopover(open, triggerRef, popoverRef, 'right');
   useEffect(() => { setDraft(value); }, [value]);
 
@@ -294,7 +298,8 @@ export function SingleDatePicker({
         <span className="single-date-label">{value ? formatDateShort(value) : 'Pick a date'}</span>
         <span className="filter-chevron"><Icon name="chevron-down" /></span>
       </button>
-      <div ref={popoverRef} className="date-popover single-date-popover" role="dialog" aria-label="Pick the transaction date">
+      {open && createPortal(
+      <div ref={popoverRef} className="date-popover single-date-popover date-popover-portal" role="dialog" aria-label="Pick the transaction date">
         <div className="date-popover-head">
           <div><strong>Transaction date</strong><small>When did this happen?</small></div>
           <button className="date-close" type="button" aria-label="Close date picker" onClick={() => setOpen(false)}>
@@ -334,7 +339,9 @@ export function SingleDatePicker({
           <button className="btn ghost" type="button" onClick={() => { setDraft(''); onChange(''); setOpen(false); }}>Clear</button>
           <button className="btn primary" type="button" onClick={() => { onChange(draft); setOpen(false); }}>Apply</button>
         </div>
-      </div>
+      </div>,
+      document.body
+      )}
     </div>
   );
 }

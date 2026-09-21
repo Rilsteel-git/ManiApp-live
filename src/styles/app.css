@@ -179,6 +179,53 @@
 }
 .date-picker.open { flex-basis: auto }
 
+/* Popover tanggal/menu filter di-render lewat createPortal ke document.body
+   (lihat DatePicker.tsx & Ui.tsx) supaya lolos dari bug Safari/WebKit:
+   position:fixed masih ikut ter-clip oleh ancestor yang overflow:auto/scroll
+   (modal, baris filter-chips), padahal spec-nya harusnya lepas ke viewport.
+   Selector 2-kelas biar menang lawan aturan `.date-popover{width:100%}` di
+   mobile-shell.css yang dimuat belakangan. */
+.date-popover.date-popover-portal {
+  display: block;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  bottom: auto;
+  z-index: 60;
+  width: min(320px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: 0;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #e1e8e1;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--float);
+}
+.filter-menu.filter-menu-portal {
+  display: grid;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: auto;
+  z-index: 60;
+  width: 220px;
+  min-width: 190px;
+  max-width: calc(100vw - 24px);
+  max-height: min(320px, calc(100vh - 24px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 6px;
+  border: 1px solid #e1e8e1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: var(--float);
+}
+
 /* ---------- Dropdown dengan banyak opsi ---------- */
 /* Menu bisa di-scroll sendiri, sisanya dimuat bertahap saat scroll (lihat ui.js) */
 .filter-menu {

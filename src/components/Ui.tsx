@@ -215,15 +215,33 @@ export function Dropdown({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  useOutsideClose(root, open, () => setOpen(false));
   // Chip filter (.filter-chips) di-scroll horizontal, yang ikut memotong menu
   // position: absolute di dalamnya — samakan dengan js/ui.js: melayang lewat
-  // position: fixed hanya untuk dropdown di baris chip itu.
+  // createPortal + position: fixed hanya untuk dropdown di baris chip itu.
   const insideFilterChips = Boolean(root.current?.closest('.filter-chips'));
+  useOutsideClose(root, open, () => setOpen(false), insideFilterChips ? menuRef : undefined);
   useFloatingPopover(open && insideFilterChips, triggerRef, menuRef, 'left');
 
   const selected = options.find((option) => option.value === value);
   const text = selected ? optionLabel(selected) : (placeholder || (options[0] ? optionLabel(options[0]) : ''));
+
+  const menu = (
+    <div ref={menuRef} className={`filter-menu${insideFilterChips ? ' filter-menu-portal' : ''}`} role="listbox" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={`filter-option${option.value === value ? ' selected' : ''}`}
+          type="button"
+          role="option"
+          aria-selected={option.value === value}
+          data-value={option.value}
+          onClick={() => { onChange(option.value); setOpen(false); }}
+        >
+          {optionLabel(option)}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <div className={`filter-dropdown${open ? ' open' : ''}`} ref={root}>
@@ -240,21 +258,7 @@ export function Dropdown({
         <span>{text}</span>
         <span className="filter-chevron"><Icon name="chevron-down" /></span>
       </button>
-      <div ref={menuRef} className="filter-menu" role="listbox" aria-label={label}>
-        {options.map((option) => (
-          <button
-            key={option.value}
-            className={`filter-option${option.value === value ? ' selected' : ''}`}
-            type="button"
-            role="option"
-            aria-selected={option.value === value}
-            data-value={option.value}
-            onClick={() => { onChange(option.value); setOpen(false); }}
-          >
-            {optionLabel(option)}
-          </button>
-        ))}
-      </div>
+      {insideFilterChips ? (open && createPortal(menu, document.body)) : menu}
     </div>
   );
 }
@@ -263,24 +267,30 @@ function optionLabel(option: DropdownOption) {
   return (option.icon ? option.icon + '  ' : '') + option.label;
 }
 
-/** Tutup popover saat klik di luar atau tekan Escape. */
+/** Tutup popover saat klik di luar atau tekan Escape.
+ *  `portalRef` opsional: dipakai kalau isi popover-nya di-render lewat
+ *  createPortal (mis. ke document.body) jadi bukan descendant `ref`
+ *  secara DOM lagi — tanpa ini klik di dalam portal dianggap "di luar". */
 export function useOutsideClose(
   ref: React.RefObject<HTMLElement | null>,
   active: boolean,
-  close: () => void
+  close: () => void,
+  portalRef?: React.RefObject<HTMLElement | null>
 ) {
   useEscapeLayer(active, close);
   useEffect(() => {
     if (!active) return;
     function onClick(event: MouseEvent) {
       const node = event.target as Node;
-      if (ref.current && !ref.current.contains(node)) close();
+      const insideRoot = Boolean(ref.current && ref.current.contains(node));
+      const insidePortal = Boolean(portalRef?.current && portalRef.current.contains(node));
+      if (!insideRoot && !insidePortal) close();
     }
     document.addEventListener('mousedown', onClick);
     return () => {
       document.removeEventListener('mousedown', onClick);
     };
-  }, [ref, active, close]);
+  }, [ref, active, close, portalRef]);
 }
 
 /* ============================================================
