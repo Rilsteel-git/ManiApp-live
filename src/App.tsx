@@ -44,7 +44,7 @@ function AuthenticatedApp() {
           <div className="alert danger">
             <span><Icon name="alert" /></span>
             <div><strong>Could not load your data</strong>{error}</div>
-            <button type="button" className="btn secondary" disabled={loading} onClick={() => void refresh().catch(() => {})}>Coba lagi</button>
+            <button type="button" className="btn secondary" disabled={loading} onClick={() => void refresh().catch(() => {})}>Try again</button>
           </div>
         )}
         <div aria-busy={loading}>

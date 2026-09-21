@@ -474,7 +474,7 @@ function TransactionModal({
         toast('Transaction updated');
       } else {
         await addTransaction(payload);
-        toast((type === 'income' ? 'Income' : 'Expense') + ' ' + formatCurrency(value, currency) + ' tersimpan');
+        toast((type === 'income' ? 'Income' : 'Expense') + ' of ' + formatCurrency(value, currency) + ' saved');
       }
       closeModal();
     } catch (reason) {

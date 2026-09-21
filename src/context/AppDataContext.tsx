@@ -47,7 +47,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       const next = await db.loadAppData(userId);
       if (request === requestId.current) setData(next);
     } catch (reason) {
-      if (request === requestId.current) setError(reason instanceof Error ? reason.message : 'Data aplikasi tidak dapat dimuat.');
+      if (request === requestId.current) setError(reason instanceof Error ? reason.message : 'Could not load app data.');
       throw reason;
     } finally {
       if (request === requestId.current) setLoading(false);
