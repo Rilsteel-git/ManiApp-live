@@ -280,7 +280,7 @@ export function AuthPage() {
                 value={password}
                 onChange={(value) => { setPassword(value); clearError('password', 'confirm'); setStatus(''); }}
                 autoComplete="new-password"
-                placeholder="At least 8 characters"
+                placeholder="Enter your password"
                 minLength={8}
                 error={errors.password}
                 hint={PASSWORD_HINT}
