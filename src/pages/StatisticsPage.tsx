@@ -11,7 +11,7 @@ import type { StatsMode } from '../types';
 import { useReport } from '../hooks/useReport';
 import { useAppData } from '../context/AppDataContext';
 import { useUi } from '../context/UiContext';
-import { formatDateShort, formatPercent, percent, txCount } from '../lib/format';
+import { formatDateID, formatPercent, percent, txCount } from '../lib/format';
 import { range, summary, transactionsIn } from '../lib/stats';
 import { Icon } from '../components/IconSprite';
 import { EmptyState, Segmented } from '../components/Ui';
@@ -213,7 +213,7 @@ export function StatisticsPage() {
                           >
                             <span className="breakdown-item-body">
                               <span className="breakdown-item-title">{note}</span>
-                              <small>{formatDateShort(item.date)} · {wallet ? wallet.name : 'Deleted wallet'}</small>
+                              <small>{formatDateID(item.date)} · {wallet ? wallet.name : 'Deleted wallet'}</small>
                             </span>
                             <span className="breakdown-item-amount num">{formatCurrency(item.amount)}</span>
                           </button>
