@@ -1,89 +1,89 @@
 ---
 name: git-workflow
-description: Alur kerja git & rilis untuk project Mani App (personal-wallet-react) — kapan kerja cukup di lokal, kapan bikin branch per modul, kapan boleh push ke dev, dan syarat sebelum merge ke Master (production, di-deploy Vercel). Gunakan setiap kali akan commit, push, atau merge branch di project ini.
+description: Git & release workflow for Mani App (personal-wallet-react) — when to just work locally, when to branch per module, when it's OK to push to dev, and what's required before merging into Master (production, deployed on Vercel). Use this whenever about to commit, push, or merge a branch in this project.
 ---
 
 # Git workflow — Mani App (personal-wallet-react)
 
-Branch produksi di repo ini adalah **`Master`** (huruf M besar — bukan `main`),
-di-track langsung oleh Vercel untuk production deploy. Branch integrasi adalah
-**`dev`**. Ikuti urutan di bawah, jangan lompat tahap.
+The production branch in this repo is **`Master`** (capital M — not `main`),
+tracked directly by Vercel for production deploys. The integration branch is
+**`dev`**. Follow the order below, don't skip a stage.
 
-## Model branch
+## Branch model
 
 ```
-module/<nama-modul>   ← kerja harian per fitur/modul, dari sini
-        │  (setelah aman lokal)
+module/<module-name>   ← day-to-day work per feature/module, start here
+        │  (once it's safe locally)
         ▼
-       dev             ← integrasi, staging sebelum production
-        │  (setelah cek CI/CD hijau)
+       dev             ← integration, staging before production
+        │  (once CI/CD is green)
         ▼
-      Master            ← production, live di Vercel
+      Master             ← production, live on Vercel
 ```
 
-## Aturan
+## Rules
 
-1. **Default: kerja tetap di lokal dulu.** Setelah edit file, JANGAN langsung
-   `git push` kecuali user eksplisit minta ("push", "deploy", "naikin ke dev",
-   dst). Commit lokal boleh, tapi push ke remote manapun (`dev` atau `Master`)
-   selalu tunggu konfirmasi user.
+1. **Default: work stays local first.** After editing files, do NOT push
+   right away unless the user explicitly asks ("push", "deploy", "get it up
+   to dev", etc.). Committing locally is fine, but pushing to any remote
+   (`dev` or `Master`) always waits for user confirmation.
 
-2. **Setiap modul/fitur baru → branch baru dari `dev`.**
+2. **Every new module/feature → a new branch off `dev`.**
    ```bash
    git checkout dev && git pull origin dev
-   git checkout -b module/<nama-modul>
+   git checkout -b module/<module-name>
    ```
-   Nama branch pakai `module/<nama-modul>` (mis. `module/multi-currency`,
-   `module/live-rate`). Satu branch = satu modul/fitur, jangan campur beberapa
-   perubahan tidak terkait dalam satu branch.
+   Branch names use `module/<module-name>` (e.g. `module/multi-currency`,
+   `module/live-rate`). One branch = one module/feature — don't mix
+   unrelated changes in the same branch.
 
-3. **Sebelum merge branch modul ke `dev`, pastikan modul itu "aman" secara lokal:**
+3. **Before merging a module branch into `dev`, confirm the module is "safe" locally:**
    ```bash
-   npm run build       # tsc -b && vite build — harus sukses, exit 0
-   npm run typecheck    # kalau ada, atau: npx tsc --noEmit -p tsconfig.app.json
-   npm test              # kalau ada test yang relevan dengan modul ini
+   npm run build       # tsc -b && vite build — must succeed, exit 0
+   npm run typecheck    # if present, or: npx tsc --noEmit -p tsconfig.app.json
+   npm test              # any tests relevant to this module
    ```
-   Kalau salah satu gagal, JANGAN merge — perbaiki dulu di branch modulnya.
-   Cek juga `git diff`/`git status` sebelum staging, jangan ada file yang
-   nggak sengaja ikut (`.env.local`, `node_modules`, dll — harusnya sudah
-   di-gitignore, tapi tetap double-check).
+   If any of these fail, do NOT merge — fix it on the module branch first.
+   Also check `git diff`/`git status` before staging, so no unintended file
+   sneaks in (`.env.local`, `node_modules`, etc. — should already be
+   gitignored, but double-check anyway).
 
-4. **Setelah lokal aman, merge ke `dev` lalu push:**
+4. **Once safe locally, merge into `dev` and push:**
    ```bash
    git checkout dev
-   git merge module/<nama-modul>
+   git merge module/<module-name>
    git push origin dev
    ```
-   Baru branch modul boleh dianggap selesai (boleh dihapus setelah merge
-   kalau user mau, tapi jangan hapus tanpa diminta).
+   Only then is the module branch considered done (it may be deleted after
+   merging if the user wants, but don't delete it unprompted).
 
-5. **Sebelum merge/push `dev` → `Master`, WAJIB cek CI/CD dulu:**
-   - Repo ini belum punya GitHub Actions — "CI/CD" yang dimaksud saat ini
-     adalah **build Vercel**. Setelah `dev` di-push, tunggu/cek di dashboard
-     Vercel apakah preview/deploy dari commit `dev` itu **sukses** (bukan
-     merah/gagal) sebelum lanjut ke `Master`.
-   - Kalau nanti ditambahkan GitHub Actions (`.github/workflows/*.yml`),
-     cek status check itu dulu (`gh run list` / `gh pr checks`) sebelum
-     merge ke `Master` — jangan merge kalau ada check yang merah.
-   - Build lokal (`npm run build`) yang sukses BUKAN pengganti cek CI/CD —
-     itu cuma syarat minimum sebelum masuk `dev` (langkah 3), bukan syarat
-     sebelum masuk `Master`.
+5. **Before merging/pushing `dev` → `Master`, CI/CD must be checked first:**
+   - This repo doesn't have GitHub Actions yet — the "CI/CD" being referred
+     to right now is the **Vercel build**. After pushing `dev`, wait for /
+     check the Vercel dashboard whether the deploy/preview for that `dev`
+     commit **succeeded** (not red/failed) before proceeding to `Master`.
+   - If GitHub Actions gets added later (`.github/workflows/*.yml`), check
+     those status checks (`gh run list` / `gh pr checks`) before merging
+     into `Master` — don't merge if any check is red.
+   - A successful local build (`npm run build`) is NOT a substitute for
+     checking CI/CD — that's only the minimum bar for getting into `dev`
+     (step 3), not for getting into `Master`.
 
-6. **Push ke `Master` cuma setelah CI/CD di `dev` hijau, dan cuma kalau user minta:**
+6. **Only push to `Master` after CI/CD on `dev` is green, and only if the user asks:**
    ```bash
    git push origin dev:Master
    ```
-   (Fast-forward — Master tidak boleh punya commit sendiri di luar yang
-   datang dari `dev`. Kalau fast-forward gagal/ada divergensi, STOP dan
-   laporkan ke user, jangan force-push.)
+   (Fast-forward — `Master` should never have commits of its own outside
+   what comes from `dev`. If the fast-forward fails / there's a divergence,
+   STOP and report it to the user; never force-push.)
 
-## Ringkasan cepat
+## Quick reference
 
-| Tahap | Branch | Syarat lanjut |
+| Stage | Branch | Requirement to proceed |
 |---|---|---|
-| Kerja harian per fitur | `module/<nama>` | — |
-| Modul dianggap aman | `module/<nama>` → `dev` | Build lokal sukses (`npm run build`) |
-| Siap production | `dev` → `Master` | CI/CD (Vercel build dari `dev`) hijau |
+| Day-to-day feature work | `module/<name>` | — |
+| Module considered safe | `module/<name>` → `dev` | Local build passes (`npm run build`) |
+| Ready for production | `dev` → `Master` | CI/CD (Vercel build from `dev`) is green |
 
-Kapan pun ragu tahap mana yang lagi dikerjakan, tanya user daripada asumsi —
-terutama soal "sudah boleh push ke `Master` belum".
+Whenever unsure which stage is currently in play, ask the user rather than
+assume — especially about whether it's already OK to push to `Master`.
