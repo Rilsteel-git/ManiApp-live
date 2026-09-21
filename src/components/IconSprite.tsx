@@ -35,7 +35,8 @@ export type IconName =
   | "eye"
   | "eye-off"
   | "camera"
-  | "alert";
+  | "alert"
+  | "refresh";
 
 export function Icon({ name, className = 'svg-icon' }: { name: IconName | string; className?: string }) {
   return (
@@ -79,6 +80,7 @@ export function IconSprite() {
     <symbol id="icon-eye-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 4"/><path d="M6.3 7.8A16.7 16.7 0 0 0 2.5 12S6 18.5 12 18.5a9.4 9.4 0 0 0 3.9-.8"/><path d="m10 10a2.8 2.8 0 0 0 4 4"/><path d="m3.5 3.5 17 17"/></symbol>
     <symbol id="icon-camera" viewBox="0 0 24 24" fill="none"><path d="M3.5 9.5A2 2 0 0 1 5.5 7.5h1.9l1.2-2h6.8l1.2 2h1.9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2v-7Z"/><circle cx="12" cy="13" r="3.2"/></symbol>
     <symbol id="icon-alert" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5v5M12 16h.01"/></symbol>
+    <symbol id="icon-refresh" viewBox="0 0 24 24" fill="none"><path d="M19 12a7 7 0 1 1-2.1-5"/><path d="M19 4.5V9h-4.5"/></symbol>
     </svg>
   );
 }

@@ -82,6 +82,13 @@
 .hint-ticker { display: block; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: #fff8e1; color: #92650a; font-size: 10px; font-weight: 600; line-height: 1.4; }
 .hint-info { display: block; margin-top: 4px; font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.4; }
 
+/* ---------- Live rate fetch ---------- */
+.rate-input-row { display: flex; gap: 8px; }
+.rate-input-row input { flex: 1; min-width: 0; }
+.rate-fetch-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 0 12px; }
+.rate-fetch-btn .svg-icon.spin { animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* ---------- Confirm modal ---------- */
 .confirm-modal { width: min(400px, 100%); }
 .confirm-modal .modal-foot .btn.danger-btn { background: var(--red); color: #fff; }

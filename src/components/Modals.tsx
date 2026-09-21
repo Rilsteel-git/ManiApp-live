@@ -40,6 +40,7 @@ import { Avatar } from './Avatar';
 import { useFormErrors } from '../hooks/useFormErrors';
 import { TransactionRow } from './rows';
 import { currencyOptions, fractionDigits, readDecimal, validAmount, validRate } from '../lib/currency';
+import { fetchLiveRate } from '../lib/exchangeRate';
 
 type Errors = Record<string, string>;
 
@@ -84,6 +85,20 @@ function WalletModal({ wallet }: { wallet: Wallet | null }) {
   );
   const { errors, setErrors, clearError } = useFormErrors();
   const [busy, setBusy] = useState(false);
+  const [fetchingRate, setFetchingRate] = useState(false);
+
+  async function useLiveRate() {
+    setFetchingRate(true);
+    try {
+      const value = await fetchLiveRate(currency);
+      setRate(String(value));
+      clearError('rate');
+    } catch (reason) {
+      toast(reason instanceof Error ? reason.message : 'Could not fetch the live rate.', { variant: 'error' });
+    } finally {
+      setFetchingRate(false);
+    }
+  }
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -160,8 +175,13 @@ function WalletModal({ wallet }: { wallet: Wallet | null }) {
             {wallet ? <p>{currency} — currency is fixed. Create another wallet for a different currency.</p> : <Dropdown label="Wallet currency" value={currency} options={currencyOptions} onChange={(value) => { setCurrency(value as Currency); setRate(''); clearError('rate', 'balance'); }} />}
           </Field>
           {currency !== 'IDR' && <Field label={`Wallet rate: 1 ${currency} = … IDR`} error={errors.rate} full htmlFor="wallet-rate">
-            <input id="wallet-rate" inputMode="decimal" value={rate} placeholder="Enter your rate" onChange={(e) => { setRate(e.target.value); clearError('rate'); }} />
-            <small className="hint-info">Used to estimate this wallet’s balance in reports. Transaction rates are saved separately. Not a live rate.</small>
+            <div className="rate-input-row">
+              <input id="wallet-rate" inputMode="decimal" value={rate} placeholder="Enter your rate" onChange={(e) => { setRate(e.target.value); clearError('rate'); }} />
+              <button className="btn secondary rate-fetch-btn" type="button" disabled={fetchingRate} onClick={useLiveRate}>
+                <Icon name="refresh" className={`svg-icon${fetchingRate ? ' spin' : ''}`} /> {fetchingRate ? 'Fetching…' : 'Get live rate'}
+              </button>
+            </div>
+            <small className="hint-info">Used to estimate this wallet’s balance in reports. Transaction rates are saved separately. Not a live rate — click "Get live rate" to fill in today's rate, then adjust if you need to.</small>
           </Field>}
           <Field name="balance" label={`Starting balance (${currency})`} error={errors.balance} htmlFor="wallet-balance">
             <input
