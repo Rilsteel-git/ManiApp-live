@@ -50,6 +50,9 @@ export interface Transaction {
   /** YYYY-MM-DD */
   date: string;
   createdAt: string;
+  /** Transfer legs are excluded from income/expense totals and breakdowns. */
+  isTransfer: boolean;
+  transferPairId: string | null;
 }
 
 /** Wallet + saldo berjalan & jumlah transaksi, siap dirender. */
@@ -64,6 +67,14 @@ export interface WalletDetail extends WalletWithBalance {
   transactions: Transaction[];
   income: number;
   expense: number;
+  transfersIn: number;
+  transfersOut: number;
+}
+
+/** Wallet asal & tujuan dari satu pasangan transfer. */
+export interface TransferPeer {
+  fromWalletId: string | null;
+  toWalletId: string | null;
 }
 
 export interface Totals {
@@ -149,6 +160,19 @@ export interface TransactionPayload {
   categoryId: string;
   type: TransactionType;
   amount: number;
+  note: string;
+  date: string;
+}
+
+export interface TransferPayload {
+  fromWalletId: string;
+  fromCurrency: Currency;
+  fromRate: number;
+  fromAmount: number;
+  toWalletId: string;
+  toCurrency: Currency;
+  toRate: number;
+  toAmount: number;
   note: string;
   date: string;
 }

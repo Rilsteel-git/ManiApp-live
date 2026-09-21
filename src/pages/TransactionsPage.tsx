@@ -7,54 +7,71 @@ import { useEffect, useMemo, useState } from 'react';
 import type { Currency, Transaction, TransactionType } from '../types';
 import { useAppData } from '../context/AppDataContext';
 import { EMPTY_FILTERS, useUi } from '../context/UiContext';
-import { filterTransactions, totals } from '../lib/selectors';
+import { collapseTransfers, filterTransactions, totals, transferPeers } from '../lib/selectors';
 import { formatDateRelative, txCount } from '../lib/format';
 import { Icon } from '../components/IconSprite';
-import { Dropdown, EmptyState } from '../components/Ui';
+import { Dropdown, EmptyState, Loading } from '../components/Ui';
 import { RangeDatePicker } from '../components/DatePicker';
 import { TransactionRow } from '../components/rows';
+import { useDeleteTransfer } from '../components/Modals';
 import { useReport } from '../hooks/useReport';
+import { useIncrementalList } from '../hooks/useIncrementalList';
 import { currencyOptions, reportTransactions } from '../lib/currency';
 
-const PAGE_SIZE = 12;
+const TRANSACTION_BATCH_SIZE = 10;
 
 export function TransactionsPage() {
   const { wallets, categories, transactions } = useAppData();
   const { currency, rate, formatCurrency, formatCompact } = useReport();
   const [display, setDisplay] = useState('original');
-  const { filters, setFilters, txPage, setTxPage, openModal, toast } = useUi();
+  const { filters, setFilters, openModal, toast } = useUi();
+  const removeTransfer = useDeleteTransfer();
   // Tanggal yang sedang dilipat — sama seperti collapsedDates di render.js.
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
 
-  const filtered = useMemo(
-    () => filterTransactions(transactions, wallets, categories, filters),
-    [transactions, wallets, categories, filters]
-  );
+  // Tanpa filter wallet, dua leg transfer digabung jadi satu baris. Begitu
+  // difilter per wallet, leg wallet itu ditampilkan apa adanya.
+  const filtered = useMemo(() => {
+    const list = filterTransactions(transactions, wallets, categories, filters);
+    return filters.walletId ? list : collapseTransfers(list);
+  }, [transactions, wallets, categories, filters]);
+  const peers = useMemo(() => transferPeers(transactions), [transactions]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const page = Math.min(txPage, totalPages);
-  useEffect(() => { if (txPage !== page) setTxPage(page); }, [txPage, page, setTxPage]);
   useEffect(() => {
     const walletId = wallets.some((wallet) => wallet.id === filters.walletId) ? filters.walletId : '';
     const categoryId = categories.some((category) => category.id === filters.categoryId) ? filters.categoryId : '';
     if (walletId !== filters.walletId || categoryId !== filters.categoryId) {
       setFilters({ ...filters, walletId, categoryId });
-      setTxPage(1);
     }
-  }, [wallets, categories, filters, setFilters, setTxPage]);
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, (page - 1) * PAGE_SIZE + PAGE_SIZE);
+  }, [wallets, categories, filters, setFilters]);
+
+  const filterKey = [
+    filters.search,
+    filters.currency,
+    filters.walletId,
+    filters.categoryId,
+    filters.type,
+    filters.from,
+    filters.to
+  ].join('|');
+  const { visible, hasMore, loading, sentinel } = useIncrementalList(
+    filtered.length,
+    TRANSACTION_BATCH_SIZE,
+    { delayMs: 800, resetKey: filterKey, rootMargin: '0px 0px 80px 0px' }
+  );
+  const visibleItems = filtered.slice(0, visible);
   const sums = totals(reportTransactions(filtered, currency, rate));
 
   // Kelompokkan per tanggal supaya riwayat mudah dipindai.
   const groups = useMemo(() => {
     const index = new Map<string, Transaction[]>();
-    pageItems.forEach((transaction) => {
+    visibleItems.forEach((transaction) => {
       const bucket = index.get(transaction.date);
       if (bucket) bucket.push(transaction);
       else index.set(transaction.date, [transaction]);
     });
     return Array.from(index, ([date, items]) => ({ date, items }));
-  }, [pageItems]);
+  }, [visibleItems]);
 
   const walletOptions = [{ value: '', label: 'All Wallets' }].concat(
     wallets.map((wallet) => ({ value: wallet.id, label: wallet.name }))
@@ -75,7 +92,6 @@ export function TransactionsPage() {
 
   function update(patch: Partial<typeof filters>) {
     setFilters({ ...filters, ...patch });
-    setTxPage(1);
   }
 
   return (
@@ -105,7 +121,7 @@ export function TransactionsPage() {
             <button
               className="btn ghost chip-reset"
               type="button"
-              onClick={() => { setFilters(EMPTY_FILTERS); setTxPage(1); }}
+              onClick={() => setFilters(EMPTY_FILTERS)}
             >
               Clear filters
             </button>
@@ -144,7 +160,7 @@ export function TransactionsPage() {
 
         <div className="divider" />
         <div id="tx-list">
-          {pageItems.length ? (
+          {visibleItems.length ? (
             groups.map((group) => {
               const dayTotals = totals(reportTransactions(group.items, currency, rate));
               const isCollapsed = Boolean(collapsed[group.date]);
@@ -174,7 +190,10 @@ export function TransactionsPage() {
                         transaction={display === 'original' ? transaction : reportTransactions([transaction], display === 'idr' ? 'IDR' : currency, display === 'idr' ? 1 : rate)[0]}
                         categories={categories}
                         wallets={wallets}
-                        onOpen={(id) => openModal({ kind: 'transaction', id })}
+                        transfer={transaction.transferPairId ? peers.get(transaction.transferPairId) : undefined}
+                        onOpen={(id) => transaction.transferPairId
+                          ? removeTransfer(transaction.transferPairId)
+                          : openModal({ kind: 'transaction', id })}
                       />
                     ))}
                   </div>
@@ -197,28 +216,8 @@ export function TransactionsPage() {
             />
           )}
         </div>
-
-        {filtered.length > PAGE_SIZE && (
-          <div className="pager" id="tx-pager">
-            <button
-              className="btn secondary"
-              type="button"
-              disabled={page <= 1}
-              onClick={() => setTxPage(page - 1)}
-            >
-              <Icon name="chevron-left" /> Previous
-            </button>
-            <small id="tx-pager-label">Halaman {page} dari {totalPages}</small>
-            <button
-              className="btn secondary"
-              type="button"
-              disabled={page >= totalPages}
-              onClick={() => setTxPage(page + 1)}
-            >
-              Next <Icon name="chevron-right" />
-            </button>
-          </div>
-        )}
+        {hasMore && <div className="incremental-list-sentinel" ref={sentinel} aria-hidden="true" />}
+        {loading && <Loading message="Memuat transaksi berikutnya" />}
       </article>
     </section>
   );

@@ -203,7 +203,8 @@ export function Dropdown({
   value,
   onChange,
   label,
-  placeholder
+  placeholder,
+  disabled = false
 }: {
   id?: string;
   options: DropdownOption[];
@@ -211,6 +212,7 @@ export function Dropdown({
   onChange: (value: string) => void;
   label: string;
   placeholder?: string;
+  disabled?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -253,8 +255,9 @@ export function Dropdown({
         className="filter-trigger"
         type="button"
         aria-haspopup="listbox"
-        aria-expanded={open}
+        aria-expanded={disabled ? false : open}
         data-value={value}
+        disabled={disabled}
         onClick={() => setOpen(!open)}
       >
         <span>{text}</span>
@@ -306,6 +309,16 @@ export function PageSkeleton() {
           <div className="mani-skeleton"><span /><span /><span /></div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/** Loader kecil di ujung daftar yang dimuat bertahap (bukan overlay layar
+ *  penuh seperti <Loading />). Pakai logo yang sama supaya konsisten. */
+export function InlineLoader({ label = 'Loading more' }: { label?: string }) {
+  return (
+    <div className="mani-inline-loader" role="status" aria-label={label} aria-live="polite">
+      <img className="mani-inline-loader-logo" src="/mani-app-logo.png" alt="" aria-hidden="true" />
     </div>
   );
 }

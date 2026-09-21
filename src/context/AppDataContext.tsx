@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
-import type { Currency, Category, CategoryPayload, Profile, Transaction, TransactionPayload, Wallet, WalletPayload } from '../types';
+import type { Currency, Category, CategoryPayload, Profile, Transaction, TransactionPayload, TransferPayload, Wallet, WalletPayload } from '../types';
 import { useAuth } from './AuthContext';
 import * as db from '../lib/db';
 
@@ -24,6 +24,8 @@ interface AppDataValue {
   addTransaction: (payload: TransactionPayload) => Promise<void>;
   editTransaction: (id: string, payload: TransactionPayload) => Promise<void>;
   removeTransaction: (id: string) => Promise<void>;
+  addTransfer: (payload: TransferPayload) => Promise<void>;
+  removeTransfer: (pairId: string) => Promise<void>;
   saveProfile: (name: string, photoUrl?: string) => Promise<void>;
   resetData: () => Promise<void>;
   deleteAccount: () => Promise<void>;
@@ -87,6 +89,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     addTransaction: (payload) => run(() => db.createTransaction(userId!, payload)),
     editTransaction: (id, payload) => run(() => db.updateTransaction(id, payload)),
     removeTransaction: (id) => run(() => db.deleteTransaction(id)),
+    addTransfer: (payload) => run(() => db.createTransfer(userId!, payload)),
+    removeTransfer: (pairId) => run(() => db.deleteTransfer(pairId)),
     saveProfile: (name, photoUrl) => run(() => db.updateProfile(userId!, name, photoUrl)),
     resetData: () => run(db.resetMyData),
     // No run() wrapper: the account (and its session) is gone right after

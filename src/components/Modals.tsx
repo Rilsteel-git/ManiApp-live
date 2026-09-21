@@ -28,16 +28,17 @@ import {
   categoriesByType,
   categoryTransactionCount,
   resolveCategory,
+  transferPeers,
   walletDetail
 } from '../lib/selectors';
 import { useAppData } from '../context/AppDataContext';
 import { useUi } from '../context/UiContext';
-import { navigate } from './AppShell';
-import { Dropdown, EmptyState, Modal, ModalHead, Segmented } from './Ui';
+import { Dropdown, EmptyState, InlineLoader, Modal, ModalHead, Segmented } from './Ui';
 import { SingleDatePicker } from './DatePicker';
 import { Icon, type IconName } from './IconSprite';
 import { Avatar } from './Avatar';
 import { useFormErrors } from '../hooks/useFormErrors';
+import { useIncrementalList } from '../hooks/useIncrementalList';
 import { TransactionRow } from './rows';
 import { currencyOptions, fractionDigits, readDecimal, validAmount, validRate } from '../lib/currency';
 import { fetchLiveRate } from '../lib/exchangeRate';
@@ -172,7 +173,22 @@ function WalletModal({ wallet }: { wallet: Wallet | null }) {
             />
           </Field>
           <Field label="Wallet currency" full>
-            {wallet ? <p>{currency} — currency is fixed. Create another wallet for a different currency.</p> : <Dropdown label="Wallet currency" value={currency} options={currencyOptions} onChange={(value) => { setCurrency(value as Currency); setRate(''); clearError('rate', 'balance'); }} />}
+            <Dropdown
+              label="Wallet currency"
+              value={currency}
+              options={currencyOptions}
+              disabled={Boolean(wallet)}
+              onChange={(value) => {
+                setCurrency(value as Currency);
+                setRate('');
+                clearError('rate', 'balance');
+              }}
+            />
+            {wallet && (
+              <small className="hint-info">
+                Currency is fixed after a wallet is created. Create another wallet to use a different currency.
+              </small>
+            )}
           </Field>
           {currency !== 'IDR' && <Field label={`Wallet rate: 1 ${currency} = … IDR`} error={errors.rate} full htmlFor="wallet-rate">
             <div className="rate-input-row">
@@ -206,19 +222,21 @@ function WalletModal({ wallet }: { wallet: Wallet | null }) {
    ============================================================ */
 function WalletDetailModal({ walletId }: { walletId: string }) {
   const { wallets, transactions, categories } = useAppData();
-  const { closeModal, openModal, formatBalance, filters, setFilters, setTxPage } = useUi();
+  const { closeModal, openModal, formatBalance, balanceHidden, toggleBalance } = useUi();
   const detail = walletDetail(walletId, wallets, transactions);
   const remove = useDeleteWallet();
+
+  const peers = transferPeers(transactions);
+  const removeTransfer = useDeleteTransfer();
+
+  // Daftar aktivitas dimuat bertahap 10-10 saat di-scroll (bukan slice tetap + "See all").
+  const { visible, hasMore, sentinel } = useIncrementalList(detail?.transactions.length ?? 0, 5);
 
   useEffect(() => { if (!detail) closeModal(); }, [detail, closeModal]);
   if (!detail) return null;
 
-  function seeAll() {
-    closeModal();
-    setFilters({ ...filters, walletId, search: '' });
-    setTxPage(1);
-    navigate('transactions');
-  }
+  const transfersNet = detail.transfersIn - detail.transfersOut;
+  const hasTransfers = detail.transfersIn > 0 || detail.transfersOut > 0;
 
   return (
     <Modal
@@ -263,33 +281,62 @@ function WalletDetailModal({ walletId }: { walletId: string }) {
     >
       <div className="modal-body">
         <div className="wallet-detail-balance">
-          <small>Current balance</small>
+          <small>
+            Current balance
+            <button
+              type="button"
+              className="hero-eye"
+              aria-pressed={balanceHidden}
+              aria-label={balanceHidden ? 'Show balance' : 'Hide balance'}
+              title={balanceHidden ? 'Show balance' : 'Hide balance'}
+              onClick={toggleBalance}
+            >
+              <Icon name={balanceHidden ? 'eye-off' : 'eye'} />
+            </button>
+          </small>
           <strong className="num">{formatBalance(detail.balance, detail.currency)}</strong>
         </div>
-        <div className="wallet-detail-stats stat-grid">
+        <button
+          className="btn secondary wallet-detail-transfer"
+          type="button"
+          onClick={() => openModal({ kind: 'transfer', fromWalletId: walletId })}
+        >
+          <Icon name="transfer" /> Transfer money
+        </button>
+        <div className={`wallet-detail-stats stat-grid${hasTransfers ? ' has-transfers' : ''}`}>
           <div className="stat"><small>Starting</small><strong className="num">{formatCurrency(detail.initialBalance, detail.currency)}</strong></div>
           <div className="stat"><small>Money in</small><strong className="num income">{formatCurrency(detail.income, detail.currency)}</strong></div>
           <div className="stat"><small>Money out</small><strong className="num expense">{formatCurrency(detail.expense, detail.currency)}</strong></div>
+          {hasTransfers && (
+            <div className="stat">
+              <small>Transfers</small>
+              <strong className="num">{(transfersNet > 0 ? '+' : transfersNet < 0 ? '−' : '') + formatCurrency(Math.abs(transfersNet), detail.currency)}</strong>
+            </div>
+          )}
         </div>
         <div className="wallet-detail-history-section">
           <div className="wallet-detail-history-head">
             <div><h3>Activity</h3><p>Recent transactions from this wallet</p></div>
-            {detail.transactions.length > 0 && (
-              <button className="btn ghost" type="button" onClick={seeAll}>See all</button>
-            )}
           </div>
           <div className="transactions wallet-detail-history">
             {detail.transactions.length ? (
-              detail.transactions.slice(0, 8).map((transaction) => (
-                <TransactionRow
-                  key={transaction.id}
-                  transaction={transaction}
-                  categories={categories}
-                  wallets={wallets}
-                  showDate
-                  onOpen={(id) => openModal({ kind: 'transaction', id })}
-                />
-              ))
+              <>
+                {detail.transactions.slice(0, visible).map((transaction) => (
+                  <TransactionRow
+                    key={transaction.id}
+                    transaction={transaction}
+                    categories={categories}
+                    wallets={wallets}
+                    showDate
+                    transfer={transaction.transferPairId ? peers.get(transaction.transferPairId) : undefined}
+                    onOpen={(id) => transaction.transferPairId
+                      ? removeTransfer(transaction.transferPairId)
+                      : openModal({ kind: 'transaction', id })}
+                  />
+                ))}
+                <div ref={sentinel} />
+                {hasMore && <InlineLoader />}
+              </>
             ) : (
               <EmptyState
                 icon="receipt"
@@ -590,6 +637,139 @@ function TransactionModal({
 }
 
 /* ============================================================
+   TRANSFER
+   ============================================================ */
+function TransferModal({ fromWalletId }: { fromWalletId?: string }) {
+  const { wallets, addTransfer } = useAppData();
+  const { closeModal, toast } = useUi();
+  const [fromId, setFromId] = useState(fromWalletId || '');
+  const [toId, setToId] = useState('');
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(today());
+  const [note, setNote] = useState('');
+  const { errors, setErrors, clearError } = useFormErrors();
+  const [busy, setBusy] = useState(false);
+
+  const fromWallet = wallets.find((wallet) => wallet.id === fromId);
+  const toWallet = wallets.find((wallet) => wallet.id === toId);
+  const fromCurrency = fromWallet?.currency || 'IDR';
+  const toCurrency = toWallet?.currency || 'IDR';
+  const fromAmount = readDecimal(amount);
+  const amountValid = validAmount(fromAmount, fromCurrency) && fromAmount > 0;
+  const toAmount = fromWallet && toWallet
+    ? (fromCurrency === toCurrency ? fromAmount : fromAmount * fromWallet.exchangeRate / toWallet.exchangeRate)
+    : 0;
+
+  const fromOptions = [{ value: '', label: 'Choose a wallet' }].concat(
+    wallets.map((wallet) => ({ value: wallet.id, label: `${wallet.name} (${wallet.currency})` }))
+  );
+  const toOptions = [{ value: '', label: 'Choose a wallet' }].concat(
+    wallets.filter((wallet) => wallet.id !== fromId).map((wallet) => ({ value: wallet.id, label: `${wallet.name} (${wallet.currency})` }))
+  );
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    const next: Errors = {};
+    if (!fromId) next.fromId = 'Choose a wallet to send from.';
+    if (!toId) next.toId = 'Choose a wallet to send to.';
+    if (fromId && toId && fromId === toId) next.toId = 'Choose a different wallet.';
+    if (!amountValid) next.amount = `Enter an amount greater than 0 (max ${fractionDigits(fromCurrency)} decimal places).`;
+    if (!date) next.date = 'Pick a date.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+
+    setBusy(true);
+    try {
+      await addTransfer({
+        fromWalletId: fromId, fromCurrency, fromRate: fromWallet!.exchangeRate, fromAmount,
+        toWalletId: toId, toCurrency, toRate: toWallet!.exchangeRate, toAmount,
+        note, date
+      });
+      toast(`Transferred ${formatCurrency(fromAmount, fromCurrency)} to ${toWallet!.name}`);
+      closeModal();
+    } catch (reason) {
+      toast(reason instanceof Error ? reason.message : 'Could not complete the transfer.', { variant: 'error' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal
+      id="transfer-modal"
+      labelledBy="transfer-modal-title"
+      onClose={closeModal}
+      head={
+        <ModalHead
+          id="transfer-modal-title"
+          title="Transfer money"
+          desc="Move money between your own wallets. Doesn't count as income or expense."
+          closeLabel="Close transfer dialog"
+          onClose={closeModal}
+        />
+      }
+      foot={
+        <div className="modal-foot">
+          <button className="btn secondary" type="button" onClick={closeModal}>Cancel</button>
+          <button className="btn primary" type="submit" form="transfer-form" disabled={busy}>{busy ? 'Transferring…' : 'Transfer'}</button>
+        </div>
+      }
+    >
+      <form id="transfer-form" onSubmit={submit} noValidate>
+        <div className="form-grid">
+          <Field name="fromId" label="From wallet" error={errors.fromId} full htmlFor="transfer-from">
+            <Dropdown
+              id="transfer-from"
+              label="From wallet"
+              value={fromId}
+              options={fromOptions}
+              onChange={(value) => { setFromId(value); if (value === toId) setToId(''); clearError('fromId', 'toId'); }}
+            />
+          </Field>
+          <Field name="toId" label="To wallet" error={errors.toId} full htmlFor="transfer-to">
+            <Dropdown
+              id="transfer-to"
+              label="To wallet"
+              value={toId}
+              options={toOptions}
+              onChange={(value) => { setToId(value); clearError('toId'); }}
+            />
+          </Field>
+          <Field name="amount" label={`Amount (${fromCurrency})`} error={errors.amount} htmlFor="transfer-amount">
+            <input
+              id="transfer-amount"
+              inputMode="decimal"
+              placeholder="0"
+              value={amount}
+              onChange={(event) => { setAmount(event.target.value); clearError('amount'); }}
+            />
+          </Field>
+          <Field name="date" label="Date" error={errors.date} htmlFor="transfer-date">
+            <SingleDatePicker id="transfer-date-picker" triggerId="transfer-date" value={date} onChange={(value) => { setDate(value); clearError('date'); }} />
+          </Field>
+          {fromCurrency !== toCurrency && toWallet && (
+            <Field label="They'll receive" full>
+              <input disabled value={amountValid ? formatCurrency(toAmount, toCurrency) : ''} placeholder="Enter an amount first" />
+              <small className="hint-info">Converted using each wallet's own exchange rate.</small>
+            </Field>
+          )}
+          <Field name="note" label="Note (optional)" full htmlFor="transfer-note">
+            <input
+              id="transfer-note"
+              type="text"
+              name="note"
+              placeholder="e.g. Moving savings"
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+            />
+          </Field>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/* ============================================================
    PROFILE
    ============================================================ */
 const PHOTO_SIZE = 256;
@@ -833,7 +1013,7 @@ export function useDeleteTransaction() {
     confirm({
       title: 'Delete this transaction?',
       message: label + ' · ' + formatSigned(transaction.amount, transaction.type, transaction.currency) +
-        ' pada ' + formatDateID(transaction.date) + '. Saldo wallet akan dihitung ulang.',
+        ' on ' + formatDateID(transaction.date) + '. The wallet balance will be recalculated.',
       confirmLabel: 'Delete transaction',
       onConfirm: async () => {
         try {
@@ -842,6 +1022,41 @@ export function useDeleteTransaction() {
           toast('Transaction deleted');
         } catch (reason) {
           toast(reason instanceof Error ? reason.message : 'Could not delete transaction.', { variant: 'error' });
+        }
+      }
+    });
+  };
+}
+
+/** Transfer nggak bisa dibuka di form transaksi biasa (form itu mewajibkan
+ *  kategori), jadi tap pada baris transfer menampilkan ringkasannya plus
+ *  satu-satunya aksi yang masuk akal: hapus kedua leg sekaligus. */
+export function useDeleteTransfer() {
+  const { wallets, transactions, removeTransfer } = useAppData();
+  const { confirm, toast, closeModal } = useUi();
+
+  return function remove(pairId: string) {
+    const legs = transactions.filter((item) => item.transferPairId === pairId);
+    if (!legs.length) return;
+    const out = legs.find((item) => item.type === 'expense');
+    const into = legs.find((item) => item.type === 'income');
+    const nameOf = (id: string | null | undefined) =>
+      wallets.find((wallet) => wallet.id === id)?.name || 'Deleted wallet';
+    const amount = out || into!;
+
+    confirm({
+      title: 'Delete this transfer?',
+      message: `${nameOf(out?.walletId)} → ${nameOf(into?.walletId)} · ` +
+        `${formatCurrency(amount.amount, amount.currency)} on ${formatDateID(amount.date)}. ` +
+        'Both sides are removed and the wallet balances are recalculated.',
+      confirmLabel: 'Delete transfer',
+      onConfirm: async () => {
+        try {
+          await removeTransfer(pairId);
+          closeModal();
+          toast('Transfer deleted');
+        } catch (reason) {
+          toast(reason instanceof Error ? reason.message : 'Could not delete transfer.', { variant: 'error' });
         }
       }
     });
@@ -861,6 +1076,10 @@ export function ModalHost() {
       toast('Add a wallet before recording transactions', { variant: 'error' });
       openModal({ kind: 'wallet' });
     }
+    if (modal?.kind === 'transfer' && wallets.length < 2) {
+      toast('Add a second wallet before transferring money', { variant: 'error' });
+      openModal({ kind: 'wallet' });
+    }
   }, [modal, wallets.length, openModal, toast]);
 
   return (
@@ -878,6 +1097,9 @@ export function ModalHost() {
           transaction={transactions.find((item) => item.id === modal.id) || null}
           initialType={modal.type}
         />
+      )}
+      {modal?.kind === 'transfer' && wallets.length > 1 && (
+        <TransferModal key={modal.fromWalletId || 'new'} fromWalletId={modal.fromWalletId} />
       )}
       {modal?.kind === 'profile' && <ProfileModal />}
       <ConfirmModal />

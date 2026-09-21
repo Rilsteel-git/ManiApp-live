@@ -4,26 +4,29 @@
    (walletCard, walletRow, addWalletRow, transactionRow).
    ============================================================ */
 
-import type { Currency, Category, Transaction, Wallet, WalletWithBalance } from '../types';
-import { formatSigned, formatDateRelative, txCount } from '../lib/format';
+import type { Currency, Category, Transaction, TransferPeer, Wallet, WalletWithBalance } from '../types';
+import { formatCurrency, formatSigned, formatDateRelative, txCount } from '../lib/format';
 import { resolveCategory } from '../lib/selectors';
 import { Icon, type IconName } from './IconSprite';
 
-/** Kartu wallet (dashboard). `onEdit`/`onDelete` kosong = tanpa tombol aksi. */
+/** Kartu wallet (dashboard). `onEdit`/`onDelete` kosong = tanpa tombol aksi.
+ *  `onOpen` kosong = kartu tidak bisa di-tap (dipertahankan buat konteks lain). */
 export function WalletCard({
   wallet,
   formatBalance,
   onEdit,
-  onDelete
+  onDelete,
+  onOpen
 }: {
   wallet: WalletWithBalance;
   formatBalance: (value: number, currency?: Currency) => string;
   onEdit?: (id: string) => void;
   onDelete?: (id: string) => void;
+  onOpen?: (id: string) => void;
 }) {
   const negative = wallet.balance < 0;
-  return (
-    <div className={`wallet${negative ? ' negative' : ''}`}>
+  const body = (
+    <>
       <div className="wallet-top">
         <div className="wallet-name">
           <span className="wallet-icon"><Icon name={wallet.icon as IconName} /></span>
@@ -37,7 +40,7 @@ export function WalletCard({
                 type="button"
                 aria-label={`Edit wallet ${wallet.name}`}
                 title="Edit"
-                onClick={() => onEdit(wallet.id)}
+                onClick={(event) => { event.stopPropagation(); onEdit(wallet.id); }}
               >
                 <Icon name="edit" />
               </button>
@@ -48,7 +51,7 @@ export function WalletCard({
                 type="button"
                 aria-label={`Delete wallet ${wallet.name}`}
                 title="Delete"
-                onClick={() => onDelete(wallet.id)}
+                onClick={(event) => { event.stopPropagation(); onDelete(wallet.id); }}
               >
                 <Icon name="close" />
               </button>
@@ -59,7 +62,22 @@ export function WalletCard({
       <div className="wallet-balance num">{formatBalance(wallet.balance, wallet.currency)}</div>
       <div className="wallet-meta">{wallet.typeLabel} · {txCount(wallet.transactionCount)}</div>
       {negative && <div className="wallet-hint">This wallet is in the red — check its transactions.</div>}
-    </div>
+    </>
+  );
+
+  if (!onOpen) {
+    return <div className={`wallet${negative ? ' negative' : ''}`}>{body}</div>;
+  }
+
+  return (
+    <button
+      className={`wallet${negative ? ' negative' : ''}`}
+      type="button"
+      aria-label={`Open ${wallet.name}`}
+      onClick={() => onOpen(wallet.id)}
+    >
+      {body}
+    </button>
   );
 }
 
@@ -122,30 +140,48 @@ export function TransactionRow({
   categories,
   wallets,
   showDate = false,
-  onOpen
+  onOpen,
+  transfer
 }: {
   transaction: Transaction;
   categories: Category[];
   wallets: Wallet[];
   showDate?: boolean;
   onOpen?: (id: string) => void;
+  /** Wallet asal & tujuan kalau baris ini bagian dari transfer. */
+  transfer?: TransferPeer;
 }) {
   const category = resolveCategory(categories, transaction.categoryId);
   const wallet = wallets.find((item) => item.id === transaction.walletId);
   const walletName = wallet ? wallet.name : 'Deleted wallet';
-  const metaParts = [category.name, walletName];
+  const isTransfer = transaction.isTransfer;
+
+  function nameOf(id: string | null | undefined) {
+    return wallets.find((item) => item.id === id)?.name || 'Deleted wallet';
+  }
+
+  // Transfer bukan income/expense — ditampilkan netral (tanpa +/− dan tanpa
+  // warna merah/hijau), sebagai satu baris "asal → tujuan".
+  const route = isTransfer
+    ? (transfer ? `${nameOf(transfer.fromWalletId)} → ${nameOf(transfer.toWalletId)}` : walletName)
+    : '';
+  const metaParts = isTransfer ? [route] : [category.name, walletName];
   if (showDate) metaParts.unshift(formatDateRelative(transaction.date));
-  const title = transaction.note || category.name;
+  const title = isTransfer ? (transaction.note || 'Transfer') : (transaction.note || category.name);
 
   const body = (
     <>
-      <span className="transaction-icon" aria-hidden="true">{category.icon}</span>
+      <span className="transaction-icon" aria-hidden="true">
+        {isTransfer ? <Icon name="transfer" /> : category.icon}
+      </span>
       <span className="transaction-body">
         <span className="transaction-title">{title}</span>
         <span className="transaction-meta">{metaParts.join(' · ')}</span>
       </span>
-      <span className={`transaction-amount ${transaction.type} num`}>
-        {formatSigned(transaction.amount, transaction.type, transaction.currency)}
+      <span className={`transaction-amount num ${isTransfer ? 'transfer' : transaction.type}`}>
+        {isTransfer
+          ? formatCurrency(transaction.amount, transaction.currency)
+          : formatSigned(transaction.amount, transaction.type, transaction.currency)}
       </span>
     </>
   );

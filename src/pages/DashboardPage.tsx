@@ -9,15 +9,17 @@ import { useUi } from '../context/UiContext';
 import {
   formatPercent
 } from '../lib/format';
-import { sortTransactions, withBalances } from '../lib/selectors';
+import { collapseTransfers, sortTransactions, transferPeers, withBalances } from '../lib/selectors';
 import { comparison, periodTotals, range } from '../lib/stats';
 import { Icon } from '../components/IconSprite';
 import { EmptyState } from '../components/Ui';
 import { AddWalletCard, TransactionRow, WalletCard } from '../components/rows';
+import { useDeleteTransfer } from '../components/Modals';
 
 export function DashboardPage() {
   const { wallets, categories, transactions: nativeTransactions } = useAppData();
   const { openModal, balanceHidden, toggleBalance, formatBalance: nativeFormatBalance } = useUi();
+  const removeTransfer = useDeleteTransfer();
 
   const { transactions, total, formatBalance, formatCurrency, formatCompact, currency } = useReport();
   const walletCards = withBalances(wallets, nativeTransactions);
@@ -29,7 +31,8 @@ export function DashboardPage() {
   const hasSpendingHistory = Boolean(compare.before.expense || compare.current.expense);
   const delta = compare.expenseDelta;
 
-  const recent = sortTransactions(nativeTransactions).slice(0, 5);
+  const recent = collapseTransfers(sortTransactions(nativeTransactions)).slice(0, 5);
+  const peers = transferPeers(nativeTransactions);
 
   const badge = !monthTotals.income && !monthTotals.expense
     ? { className: 'badge gray', label: 'No data yet' }
@@ -132,7 +135,12 @@ export function DashboardPage() {
             {walletCards.length ? (
               <>
                 {walletCards.slice(0, 3).map((wallet) => (
-                  <WalletCard key={wallet.id} wallet={wallet} formatBalance={nativeFormatBalance} />
+                  <WalletCard
+                    key={wallet.id}
+                    wallet={wallet}
+                    formatBalance={nativeFormatBalance}
+                    onOpen={(id) => openModal({ kind: 'wallet-detail', id })}
+                  />
                 ))}
                 <AddWalletCard onClick={() => openModal({ kind: 'wallet' })} />
               </>
@@ -162,7 +170,10 @@ export function DashboardPage() {
                   categories={categories}
                   wallets={wallets}
                   showDate
-                  onOpen={(id) => openModal({ kind: 'transaction', id })}
+                  transfer={transaction.transferPairId ? peers.get(transaction.transferPairId) : undefined}
+                  onOpen={(id) => transaction.transferPairId
+                    ? removeTransfer(transaction.transferPairId)
+                    : openModal({ kind: 'transaction', id })}
                 />
               ))
             ) : (
