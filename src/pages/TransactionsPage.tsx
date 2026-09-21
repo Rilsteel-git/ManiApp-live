@@ -97,7 +97,7 @@ export function TransactionsPage() {
             <input
               type="search"
               id="tx-search"
-              placeholder="Search notes, wallets, categories"
+              placeholder="Search transactions"
               aria-label="Search transactions"
               value={filters.search}
               onChange={(event) => update({ search: event.target.value })}

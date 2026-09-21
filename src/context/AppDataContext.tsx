@@ -25,6 +25,7 @@ interface AppDataValue {
   removeTransaction: (id: string) => Promise<void>;
   saveProfile: (name: string, photoUrl?: string) => Promise<void>;
   resetData: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
   saveCurrencySettings: (currency: Currency, rate: number) => Promise<void>;
 }
 
@@ -86,6 +87,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     removeTransaction: (id) => run(() => db.deleteTransaction(id)),
     saveProfile: (name, photoUrl) => run(() => db.updateProfile(userId!, name, photoUrl)),
     resetData: () => run(db.resetMyData),
+    // No run() wrapper: the account (and its session) is gone right after
+    // this succeeds, so there's nothing left to refresh.
+    deleteAccount: () => db.deleteMyAccount(),
     saveCurrencySettings: (currency, rate) => run(() => db.updateCurrencySettings(userId!, currency, rate))
   }), [run, userId]);
   const value = useMemo<AppDataValue>(() => ({

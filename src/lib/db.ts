@@ -125,6 +125,11 @@ export async function resetMyData() {
   if (error) throw error;
 }
 
+export async function deleteMyAccount() {
+  const { error } = await client().rpc('delete_my_account');
+  if (error) throw error;
+}
+
 export async function updateCurrencySettings(id: string, currency: Currency, rate: number) {
   const { error } = await client().from('profiles').update({ report_currency: currency, report_rate: rate }).eq('id', id);
   if (error) throw error;

@@ -171,9 +171,13 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   border: 0;
   border-bottom: 1px solid var(--line);
   background: transparent;
+  color: inherit;
   text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
   transition: background .16s;
 }
+.transaction-title { color: var(--ink); }
 .transactions .transaction:last-child { border-bottom: 0 }
 .transaction:hover { background: #fafcfa }
 .transaction:active { background: #f2f7f2 }
@@ -251,7 +255,7 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23667069' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6'/%3E%3Cpath d='m15.5 15.5 4 4'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: 13px center;
-  font-size: 13px;
+  text-overflow: ellipsis;
 }
 .filter-search-row > input[type="search"]:focus {
   border-color: #8bd39a;

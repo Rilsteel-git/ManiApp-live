@@ -43,7 +43,7 @@ function MenuRow({
 
 export function ProfilePage() {
   const { signOut } = useAuth();
-  const { profile, wallets, categories, transactions } = useAppData();
+  const { profile, wallets, categories, transactions, deleteAccount } = useAppData();
   const { openModal, confirm, toast } = useUi();
 
   const categoryCount = activeCategories(categories).length;
@@ -56,6 +56,32 @@ export function ProfilePage() {
       message: 'Your session will end. Wallets, categories, and transactions stay in your account.',
       confirmLabel: 'Log out',
       onConfirm: () => { void signOut().catch(() => toast('Could not log out. Please try again.', { variant: 'error' })); }
+    });
+  }
+
+  function deleteAccountFlow() {
+    confirm({
+      title: 'Delete your account?',
+      message: 'This permanently deletes your profile, wallets, categories, and every transaction. This cannot be undone.',
+      confirmLabel: 'Delete account',
+      onConfirm: () => {
+        void (async () => {
+          try {
+            await deleteAccount();
+          } catch {
+            toast('Could not delete your account. Please try again.', { variant: 'error' });
+            return;
+          }
+          // The account is already gone server-side at this point; if
+          // signOut() itself fails (e.g. the now-invalid session can't be
+          // revoked remotely), there's nothing left to roll back.
+          try {
+            await signOut();
+          } catch {
+            /* ignore */
+          }
+        })();
+      }
     });
   }
 
@@ -137,6 +163,13 @@ export function ProfilePage() {
               meta="End this session"
               danger
               onClick={logout}
+            />
+            <MenuRow
+              icon="trash"
+              title="Delete account"
+              meta="Permanently erase your profile and data"
+              danger
+              onClick={deleteAccountFlow}
             />
           </div>
         </article>
