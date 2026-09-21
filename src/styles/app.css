@@ -4,6 +4,12 @@
    Hanya berisi pola yang belum ada di design system.
    ============================================================ */
 
+/* Kartu dipakai sebagai grid-item di banyak layout (.stack, .grid-2, dst).
+   Tanpa ini, grid-item defaultnya nggak boleh menyusut di bawah ukuran
+   konten minimumnya — begitu ada anak yang non-shrinkable (mis. tombol
+   white-space: nowrap), kartu ikut melebar sampai lebih lebar dari layar. */
+.card { min-width: 0; }
+
 /* ---------- Routing antar section ---------- */
 .page { display: none; }
 .page.active { display: block; animation: page-in .18s ease-out; }
@@ -83,8 +89,8 @@
 .hint-info { display: block; margin-top: 4px; font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.4; }
 
 /* ---------- Live rate fetch ---------- */
-.rate-input-row { display: flex; gap: 8px; }
-.rate-input-row input { flex: 1; min-width: 0; }
+.rate-input-row { display: flex; flex-wrap: wrap; gap: 8px; min-width: 0; }
+.rate-input-row input { flex: 1; min-width: 120px; }
 .rate-fetch-btn { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; padding: 0 12px; }
 .rate-fetch-btn .svg-icon.spin { animation: spin .8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
