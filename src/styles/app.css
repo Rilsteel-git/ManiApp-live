@@ -1,0 +1,306 @@
+/* ============================================================
+   Mani App — app layer
+   Dibangun di atas css/design-system.css (token & komponen).
+   Hanya berisi pola yang belum ada di design system.
+   ============================================================ */
+
+/* ---------- Routing antar section ---------- */
+.page { display: none; }
+.page.active { display: block; animation: page-in .18s ease-out; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px) } to { opacity: 1; transform: none } }
+@media (prefers-reduced-motion: reduce) { .page.active { animation: none } }
+
+/* ---------- Topbar ---------- */
+.topbar-actions-mobile { display: none; }
+.avatar-btn { font-weight: 850; }
+
+/* ---------- Grid umum ---------- */
+.grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.stack { display: grid; gap: 18px; }
+.stat-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 11px; }
+.stat { padding: 15px; border-radius: 16px; background: var(--canvas); }
+.stat small { display: block; color: var(--muted); font-size: 11px; }
+.stat strong { display: block; margin-top: 7px; font-size: 18px; letter-spacing: -.03em; }
+
+/* ---------- Wallet card: aksi ---------- */
+.wallet-actions { position: relative; display: flex; gap: 2px; }
+.wallet-actions .wallet-menu { width: 30px; height: 30px; border-radius: 9px; font-size: 15px; line-height: 1; }
+.wallet-actions .wallet-menu:hover { background: var(--mint); color: var(--green); }
+.wallet.negative .wallet-balance { color: var(--red); }
+.wallet-hint { margin-top: 6px; font-size: 11px; color: var(--red); }
+
+/* ---------- Transaksi: baris dapat diklik ---------- */
+.transaction { padding: 6px 0; }
+.transaction-row-actions { display: flex; align-items: center; gap: 6px; }
+.transaction:hover .transaction-row-actions .wallet-menu { color: var(--green); }
+.transaction-amount-wrap { display: flex; align-items: center; gap: 10px; }
+.tx-date-group { margin-top: 18px; }
+.tx-date-group:first-child { margin-top: 0; }
+.tx-date-label {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+  padding-bottom: 7px; color: var(--muted); font-size: 11px; font-weight: 800;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.tx-date-label .num { text-transform: none; letter-spacing: 0; }
+
+/* ---------- Chart ---------- */
+.chart-box { position: relative; height: 240px; }
+.chart-box.tall { height: 270px; }
+@media (min-width: 1020px) { .chart-box { height: 260px } .chart-box.tall { height: 300px } }
+.chart-empty { display: grid; place-items: center; height: 100%; color: var(--muted); font-size: 12px; text-align: center; }
+
+/* ---------- Breakdown kategori ---------- */
+.breakdown { display: grid; gap: 13px; }
+.breakdown-row { display: grid; gap: 6px; }
+.breakdown-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 12px; }
+.breakdown-top span:first-child { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.breakdown-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 700; }
+.bar-track { height: 7px; border-radius: 999px; background: #eef1ee; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 999px; transition: width .25s ease-out; }
+
+/* ---------- Period navigator ---------- */
+.period-nav { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.period-nav strong { font-size: 14px; letter-spacing: -.02em; }
+.period-nav small { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+.period-nav .icon-btn { width: 38px; height: 38px; font-size: 16px; }
+
+/* ---------- Pagination ---------- */
+.pager { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 16px; }
+.pager small { color: var(--muted); font-size: 12px; }
+.pager .btn { min-height: 38px; padding: 0 14px; font-size: 12px; }
+
+/* ---------- Form error ---------- */
+.input.error input, .input.error textarea, .input.error .filter-trigger { border-color: var(--red); }
+.field-error { display: none; color: var(--red); font-size: 11px; font-weight: 650; }
+.input.error .field-error { display: block; }
+
+/* ---------- Rate conversion preview ---------- */
+.input input:disabled { background: var(--surface-2, #f0f0f2); color: var(--muted); cursor: not-allowed; }
+
+/* ---------- Inline hint ticker ---------- */
+.hint-ticker { display: block; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: #fff8e1; color: #92650a; font-size: 10px; font-weight: 600; line-height: 1.4; }
+.hint-info { display: block; margin-top: 4px; font-size: 10px; font-weight: 500; color: var(--muted); line-height: 1.4; }
+
+/* ---------- Confirm modal ---------- */
+.confirm-modal { width: min(400px, 100%); }
+.confirm-modal .modal-foot .btn.danger-btn { background: var(--red); color: #fff; }
+.confirm-modal .modal-foot .btn.danger-btn:hover { background: #bd2a2a; }
+
+/* ---------- Skeleton ---------- */
+.skeleton { border-radius: 12px; background: linear-gradient(90deg, #eef1ee 25%, #f6f8f6 37%, #eef1ee 63%); background-size: 400% 100%; animation: shimmer 1.3s infinite; }
+@keyframes shimmer { 0% { background-position: 100% 0 } 100% { background-position: 0 0 } }
+
+/* ---------- Segmented full width di mobile ---------- */
+.segmented.block { display: flex; width: 100%; }
+.segmented.block .segment { flex: 1; }
+
+/* ---------- Toast container ---------- */
+.toast-stack { position: fixed; right: 18px; bottom: 18px; z-index: 80; display: grid; gap: 8px; width: min(320px, calc(100vw - 36px)); }
+@media (max-width: 740px) { .toast-stack { right: 12px; bottom: 82px; left: 12px; width: auto } }
+.toast-close { flex: 0 0 auto; border: 1px solid #526056; border-radius: 50%; width: 28px; height: 28px; background: transparent; color: #fff; line-height: 1; }
+
+/* ---------- Responsif ---------- */
+@media (max-width: 1020px) { .grid-2 { grid-template-columns: 1fr } }
+@media (max-width: 740px) {
+  .grid-3 { grid-template-columns: 1fr }
+  .stat-grid { grid-template-columns: 1fr 1fr }
+  .stat-grid .stat:last-child:nth-child(odd) { grid-column: 1 / -1 }
+  .topbar-actions-mobile { display: flex; gap: 8px; }
+  .period-nav strong { font-size: 13px }
+}
+@media (max-width: 480px) {
+  .chart-box { height: 210px }
+  /* Judul + link "Kelola/Lihat semua" tetap sebaris; tombol CTA & segmented turun full-width */
+  .card-head { flex-wrap: wrap; align-items: center }
+  .card-head > div:first-child { flex: 1 1 auto; min-width: 0 }
+  .card-head > .btn.ghost { flex: 0 0 auto; padding: 0; min-height: 0; white-space: nowrap }
+  .card-head > .btn:not(.ghost) { flex: 1 0 100%; width: 100% }
+  .card-head > .segmented { flex: 1 0 100% }
+  .transaction { grid-template-columns: 38px minmax(0, 1fr) auto }
+}
+
+/* ---------- Ringkasan bulan ini ---------- */
+.monthly .mini-grid + div { margin-top: 18px }
+@media (max-width: 740px) {
+  .monthly .mini-grid + div .divider { display: none }
+  .monthly .mini-grid + div { margin-top: 4px }
+}
+
+/* ---------- Modal (satu komponen untuk semua modal) ---------- */
+/* Seluruh isi modal (head → body → foot) men-scroll sebagai satu kesatuan;
+   tidak ada bagian yang menempel/fixed di atas maupun bawah. */
+.modal-backdrop { align-items: safe center }
+.modal {
+  display: block;
+  max-height: calc(100vh - 36px);
+  max-height: calc(100dvh - 36px);
+  padding: 23px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+}
+/* Modal tanpa form (mis. detail wallet) tetap butuh jarak antar section */
+.modal-body { display: flex; flex-direction: column; gap: 18px }
+.modal-head { margin-bottom: 18px }
+.modal-head > div { min-width: 0 }
+.modal-head > .icon-btn { flex: 0 0 44px; height: 44px }
+.modal-foot { margin-top: 18px; padding-top: 14px }
+/* ---------- Popover tanggal melayang ---------- */
+/* Fixed supaya tidak mendorong layout (tombol di bawahnya tidak melar ke bawah)
+   dan tidak terpotong oleh area scroll modal/kartu. Posisi diatur di ui.js. */
+.date-picker.open .date-popover,
+.single-date-picker.open .date-popover,
+.modal .single-date-picker.open .date-popover {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  z-index: 60;
+  width: min(320px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.date-picker.open { flex-basis: auto }
+
+/* ---------- Dropdown dengan banyak opsi ---------- */
+/* Menu bisa di-scroll sendiri, sisanya dimuat bertahap saat scroll (lihat ui.js) */
+.filter-menu {
+  max-height: min(264px, 44vh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.filter-menu .filter-option { flex: 0 0 auto }
+.filter-menu-more {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+/* ---------- Filter & pager transaksi di mobile ---------- */
+@media (max-width: 480px) {
+  /* Semua kontrol filter jadi grid dua kolom yang seragam tingginya */
+  .filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
+  .filter-row > input[type="search"] { grid-column: 1 / -1; width: 100% }
+  .filter-row .filter-dropdown,
+  .filter-row .date-picker { width: 100%; min-width: 0 }
+  .filter-row .date-trigger {
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 43px;
+    padding: 0 13px;
+    border-radius: 13px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  /* Reset filter jadi aksi selebar baris, bukan link menggantung di kiri */
+  .filter-row > .btn.ghost { grid-column: 1 / -1; min-height: 40px }
+
+  /* Pager: label dapat barisnya sendiri supaya tidak terpotong */
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+  .pager small { grid-row: 1; grid-column: 1 / -1; text-align: center }
+  .pager .btn { grid-row: 2; width: 100% }
+}
+
+/* ---------- Kalender rentang tanggal (filter transaksi) ---------- */
+.range-calendar {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.range-date-value { cursor: pointer }
+.range-date-value.active {
+  border-color: #8bd39a;
+  box-shadow: 0 0 0 3px rgba(139, 211, 154, .18);
+}
+.calendar-day.in-range {
+  border-radius: 0;
+  background: var(--mint);
+  color: var(--green);
+}
+
+/* ---------- Filter kategori & empty state chart ---------- */
+/* Segmented filter kategori dibuat selebar card, sama seperti di Statistik */
+#category-filter { display: flex; width: 100% }
+#category-filter .segment { flex: 1 }
+/* Empty state di dalam chart-box memakai style empty state design system */
+.chart-empty { align-content: center }
+.chart-empty .empty { padding: 0 }
+.chart-empty .empty p { margin-bottom: 12px }
+/* Divider di kartu statistik disembunyikan saat daftarnya kosong */
+.chart-box:has(.chart-empty) + .divider { display: none }
+
+/* ---------- Ikon SVG (sprite design system) ---------- */
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden }
+.svg-icon {
+  display: block;
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Navigasi */
+.nav-icon { width: 22px; font-size: 0 }
+.nav-icon .svg-icon { width: 20px; height: 20px }
+.mobile-nav b { display: grid; place-items: center; font-size: 0; line-height: 0 }
+.mobile-nav b .svg-icon { width: 21px; height: 21px }
+.mobile-nav a.active .svg-icon { stroke-width: 2 }
+/* Service rail & quick action */
+.service-icon .svg-icon { width: 21px; height: 21px }
+.quick b { display: grid; place-items: center; margin-bottom: 4px; font-size: 0 }
+.quick b .svg-icon { width: 20px; height: 20px; stroke-width: 2 }
+/* Tombol dengan ikon di dalamnya */
+.btn .svg-icon { width: 17px; height: 17px; stroke-width: 2 }
+.icon-btn .svg-icon { width: 18px; height: 18px }
+.date-trigger .svg-icon { width: 17px; height: 17px }
+.filter-chevron { display: grid; place-items: center; font-size: 0 }
+.filter-chevron .svg-icon { width: 17px; height: 17px }
+.calendar-nav button .svg-icon { width: 15px; height: 15px }
+.wallet-menu { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 9px }
+.wallet-menu:hover { background: var(--mint); color: var(--green) }
+.wallet-menu .svg-icon { width: 17px; height: 17px }
+.profile-link span .svg-icon { width: 16px; height: 16px }
+.empty-icon .svg-icon { width: 24px; height: 24px }
+.alert > span .svg-icon { width: 18px; height: 18px }
+.date-close { display: grid; place-items: center }
+.date-close .svg-icon { width: 17px; height: 17px }
+/* Kolom pencarian memakai ikon, bukan karakter teks */
+.filter-row > input[type="search"] {
+  padding-left: 38px;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23667069' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6'/%3E%3Cpath d='m15.5 15.5 4 4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 12px center;
+}
+/* Jangan tampilkan tombol clear bawaan browser pada pencarian transaksi. */
+#tx-search::-webkit-search-cancel-button,
+#tx-search::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+.wallet-icon { display: grid; place-items: center; font-size: 0 }
+.wallet-icon .svg-icon { width: 18px; height: 18px }
+.wallet-grid > .empty { grid-column: 1 / -1 }
+.category-row .category-info { flex: 1 1 auto; min-width: 0 }
+.category-row .category-info > div { min-width: 0 }
+.category-row .category-info strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.category-row > .wallet-actions { flex: 0 0 auto }
+.category-row:not(.archived) { cursor: grab; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none }
+.category-row:not(.archived) button { cursor: pointer }
+.category-row.dragging { cursor: grabbing }
+.category-row.dragging { position: relative; z-index: 2; border-radius: 12px; background: #effbef; box-shadow: 0 6px 18px rgba(0, 143, 29, .12) }
+.category-row:focus-visible { outline: 2px solid #8bd39a; outline-offset: 2px }
+.modal-foot #wallet-delete[hidden],
+.modal-foot #transaction-delete[hidden] { display: none !important }
+.category-modal #category-form { padding-bottom: 28px }
+/* garis footer modal didefinisikan sekali di mobile-shell.css untuk semua modal */
+.transaction-form > .segmented { margin-top: 16px }
+.change { display: inline-flex; align-items: center; gap: 5px }
+.change .svg-icon { width: 14px; height: 14px; stroke-width: 2.2 }

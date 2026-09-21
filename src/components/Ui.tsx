@@ -1,0 +1,319 @@
+/* ============================================================
+   Ui.tsx — primitif design system yang dipakai lintas halaman.
+   Markup-nya sengaja dibuat identik dengan app vanilla
+   (js/ui.js + index.html) supaya CSS yang sama menghasilkan
+   tampilan yang sama persis.
+   ============================================================ */
+
+import {
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode
+} from 'react';
+import { Icon, type IconName } from './IconSprite';
+import { createPortal } from 'react-dom';
+import { useFloatingPopover } from '../lib/floating';
+
+const escapeLayers: (() => void)[] = [];
+let modalCount = 0;
+let previousOverflow = '';
+function handleEscape(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    escapeLayers.at(-1)?.();
+  }
+}
+function useEscapeLayer(active: boolean, close: () => void) {
+  const closeRef = useRef(close);
+  useEffect(() => { closeRef.current = close; }, [close]);
+  useEffect(() => {
+    if (!active) return;
+    const layer = () => closeRef.current();
+    if (!escapeLayers.length) document.addEventListener('keydown', handleEscape);
+    escapeLayers.push(layer);
+    return () => {
+      escapeLayers.splice(escapeLayers.indexOf(layer), 1);
+      if (!escapeLayers.length) document.removeEventListener('keydown', handleEscape);
+    };
+  }, [active]);
+}
+
+/* ============================================================
+   EMPTY STATE — lihat PW.ui.emptyState()
+   ============================================================ */
+export function EmptyState({
+  icon = 'receipt',
+  title = 'Nothing here yet',
+  message = '',
+  actionLabel,
+  onAction
+}: {
+  icon?: IconName;
+  title?: string;
+  message?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  return (
+    <div className="empty">
+      <div className="empty-art" aria-hidden="true">
+        <span className="empty-ring" />
+        <span className="empty-ring" />
+        <span className="empty-blob" />
+        <div className="empty-icon"><Icon name={icon} /></div>
+        <span className="empty-spark empty-spark-a" />
+        <span className="empty-spark empty-spark-b" />
+        <span className="empty-spark empty-spark-c" />
+      </div>
+      <h3>{title}</h3>
+      <p>{message}</p>
+      {actionLabel && onAction && (
+        <button className="btn primary" type="button" onClick={onAction}>{actionLabel}</button>
+      )}
+    </div>
+  );
+}
+
+/* ============================================================
+   MODAL — .modal-backdrop.open > .modal
+   ============================================================ */
+export function Modal({
+  id,
+  className = '',
+  head,
+  children,
+  foot,
+  onClose,
+  labelledBy
+}: {
+  id?: string;
+  className?: string;
+  head: ReactNode;
+  children?: ReactNode;
+  foot?: ReactNode;
+  onClose: () => void;
+  labelledBy?: string;
+}) {
+  // Body dikunci selama modal terbuka, sama seperti PW.ui.openModal().
+  useEscapeLayer(true, onClose);
+  useEffect(() => {
+    if (modalCount++ === 0) previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      if (--modalCount === 0) document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  return (
+    <div
+      className="modal-backdrop open"
+      id={id}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={labelledBy}
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <div className={`modal ${className}`.trim()}>
+        {head}
+        {children}
+        {foot}
+      </div>
+    </div>
+  );
+}
+
+/** Header modal standar: judul + deskripsi + tombol tutup. */
+export function ModalHead({
+  id,
+  title,
+  desc,
+  onClose,
+  closeLabel = 'Close dialog',
+  actions
+}: {
+  id?: string;
+  title: string;
+  desc?: ReactNode;
+  onClose: () => void;
+  closeLabel?: string;
+  actions?: ReactNode;
+}) {
+  return (
+    <div className="modal-head">
+      <div><h2 id={id}>{title}</h2>{desc && <p>{desc}</p>}</div>
+      {actions}
+      <button className="icon-btn" type="button" aria-label={closeLabel} onClick={onClose}>
+        <Icon name="close" />
+      </button>
+    </div>
+  );
+}
+
+/* ============================================================
+   SEGMENTED CONTROL
+   ============================================================ */
+export function Segmented<T extends string>({
+  value,
+  options,
+  onChange,
+  block = false,
+  label,
+  id
+}: {
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (value: T) => void;
+  block?: boolean;
+  label: string;
+  id?: string;
+}) {
+  return (
+    <div className={`segmented${block ? ' block' : ''}`} id={id} role="tablist" aria-label={label}>
+      {options.map((option) => (
+        <button
+          key={option.value}
+          className={`segment${option.value === value ? ' active' : ''}`}
+          type="button"
+          role="tab"
+          aria-selected={option.value === value}
+          onClick={() => onChange(option.value)}
+        >
+          {option.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/* ============================================================
+   DROPDOWN — .filter-dropdown, dipakai untuk filter & form select
+   ============================================================ */
+export interface DropdownOption {
+  value: string;
+  label: string;
+  icon?: string;
+}
+
+export function Dropdown({
+  id,
+  options,
+  value,
+  onChange,
+  label,
+  placeholder
+}: {
+  id?: string;
+  options: DropdownOption[];
+  value: string;
+  onChange: (value: string) => void;
+  label: string;
+  placeholder?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const root = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useOutsideClose(root, open, () => setOpen(false));
+  // Chip filter (.filter-chips) di-scroll horizontal, yang ikut memotong menu
+  // position: absolute di dalamnya — samakan dengan js/ui.js: melayang lewat
+  // position: fixed hanya untuk dropdown di baris chip itu.
+  const insideFilterChips = Boolean(root.current?.closest('.filter-chips'));
+  useFloatingPopover(open && insideFilterChips, triggerRef, menuRef, 'left');
+
+  const selected = options.find((option) => option.value === value);
+  const text = selected ? optionLabel(selected) : (placeholder || (options[0] ? optionLabel(options[0]) : ''));
+
+  return (
+    <div className={`filter-dropdown${open ? ' open' : ''}`} ref={root}>
+      <button
+        ref={triggerRef}
+        id={id}
+        className="filter-trigger"
+        type="button"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        data-value={value}
+        onClick={() => setOpen(!open)}
+      >
+        <span>{text}</span>
+        <span className="filter-chevron"><Icon name="chevron-down" /></span>
+      </button>
+      <div ref={menuRef} className="filter-menu" role="listbox" aria-label={label}>
+        {options.map((option) => (
+          <button
+            key={option.value}
+            className={`filter-option${option.value === value ? ' selected' : ''}`}
+            type="button"
+            role="option"
+            aria-selected={option.value === value}
+            data-value={option.value}
+            onClick={() => { onChange(option.value); setOpen(false); }}
+          >
+            {optionLabel(option)}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function optionLabel(option: DropdownOption) {
+  return (option.icon ? option.icon + '  ' : '') + option.label;
+}
+
+/** Tutup popover saat klik di luar atau tekan Escape. */
+export function useOutsideClose(
+  ref: React.RefObject<HTMLElement | null>,
+  active: boolean,
+  close: () => void
+) {
+  useEscapeLayer(active, close);
+  useEffect(() => {
+    if (!active) return;
+    function onClick(event: MouseEvent) {
+      const node = event.target as Node;
+      if (ref.current && !ref.current.contains(node)) close();
+    }
+    document.addEventListener('mousedown', onClick);
+    return () => {
+      document.removeEventListener('mousedown', onClick);
+    };
+  }, [ref, active, close]);
+}
+
+/* ============================================================
+   LOADING
+   ============================================================ */
+export function PageSkeleton() {
+  return (
+    <div className="mani-page-skeleton" aria-hidden="true">
+      {[0, 1, 2].map((item) => (
+        <div className="card mani-skeleton-card" key={item}>
+          <div className="mani-skeleton"><span /><span /><span /></div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function Loading({ message = 'Memuat Mani' }: { message?: string }) {
+  useEffect(() => {
+    const root = document.getElementById('root');
+    const wasInert = root?.inert ?? false;
+    if (root) root.inert = true;
+    if (modalCount++ === 0) previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      if (root) root.inert = wasInert;
+      if (--modalCount === 0) document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+  return createPortal(
+    <div className="mani-loading-overlay" role="status" aria-label={message} aria-live="polite">
+      <img className="mani-loading-logo" src="/mani-app-logo.png" alt="" aria-hidden="true" />
+    </div>,
+    document.body
+  );
+}

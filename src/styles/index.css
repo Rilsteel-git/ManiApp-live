@@ -1,0 +1,94 @@
+/* ============================================================
+   Entry CSS.
+
+   Urutan persis seperti app vanilla (personal-wallet/index.html):
+     design-system -> app -> mobile-shell -> auth
+   Empat file itu disalin apa adanya dari sana dan merupakan
+   sumber kebenaran visual; jangan menimpanya dari sini.
+
+   Tailwind dimuat SETELAHNYA tanpa preflight/reset — hanya layer
+   `theme` + `utilities` — supaya tidak ada reset yang merusak
+   design system, dan utility hanya dipakai untuk markup baru.
+   ============================================================ */
+
+@import './design-system.css';
+@import './app.css';
+@import './mobile-shell.css';
+@import './auth.css';
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+
+/* Token design system dipetakan ke Tailwind: bg-brand-700, text-ink-500, ... */
+@theme {
+  --color-brand-50: #f0fdf4;
+  --color-brand-100: #eaf8e9;
+  --color-brand-500: #31bc62;
+  --color-brand-600: #00a82d;
+  --color-brand-700: #008f1d;
+  --color-brand-800: #006e19;
+  --color-canvas: #f4f6f4;
+  --color-line: #e5e9e5;
+  --color-ink-500: #707872;
+  --color-ink-700: #3f3f46;
+  --color-ink-900: #181a18;
+  --color-income: #008d59;
+  --color-expense: #d93636;
+
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-xl: 32px;
+
+  --shadow-card: 0 8px 28px rgba(31, 52, 38, 0.07);
+  --shadow-float: 0 16px 40px rgba(31, 52, 38, 0.14);
+
+  --font-sans: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+/* ---------- Loading & error global (khusus versi React) ---------- */
+.mani-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: grid;
+  place-items: center;
+  background: rgba(0, 0, 0, .45);
+  padding: 24px;
+  cursor: wait;
+}
+
+.mani-loading-logo {
+  display: block;
+  width: clamp(96px, 14vw, 128px);
+  height: clamp(96px, 14vw, 128px);
+  object-fit: contain;
+  margin: 0;
+  filter: drop-shadow(0 10px 18px rgba(0, 0, 0, .18));
+  transform-origin: 50% 80%;
+  animation: mani-wobble 1.4s ease-in-out infinite;
+}
+.mani-skeleton { display: grid; gap: 12px; margin-top: 24px; }
+.mani-skeleton span {
+  display: block;
+  height: 14px;
+  border-radius: 999px;
+  background: linear-gradient(100deg, #e4e9e5 20%, #f3f5f3 45%, #e4e9e5 70%);
+  background-size: 220% 100%;
+  animation: mani-shimmer 1.6s ease-in-out infinite;
+}
+.mani-skeleton span:first-child { width: 50%; height: 20px; }
+.mani-skeleton span:nth-child(2) { width: 80%; }
+.mani-skeleton span:last-child { width: 64%; }
+.mani-page-skeleton { display: grid; gap: 16px; }
+.mani-skeleton-card { min-height: 160px; padding: 24px; }
+.mani-skeleton-card:first-child { min-height: 210px; }
+.mani-skeleton-card .mani-skeleton { margin-top: 8px; }
+@keyframes mani-wobble {
+  0%, 100% { transform: rotate(0); }
+  20%, 60% { transform: rotate(-9deg); }
+  40%, 80% { transform: rotate(9deg); }
+}
+@keyframes mani-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .mani-loading-logo, .mani-skeleton span { animation: none; }
+}

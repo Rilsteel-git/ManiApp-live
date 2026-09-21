@@ -1,0 +1,285 @@
+/* ============================================================
+   AuthPage.tsx — salinan halaman auth dari
+   personal-wallet/index.html (#auth-screen) + css/auth.css.
+   Panel login/register dipilih lewat hash, sama seperti vanilla:
+   #/login dan #/register.
+   ============================================================ */
+
+import { useEffect, useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { Icon } from '../components/IconSprite';
+import { useFormErrors } from '../hooks/useFormErrors';
+
+type AuthRoute = 'login' | 'register';
+
+function getAuthRoute(): AuthRoute {
+  return window.location.hash.replace('#/', '') === 'register' ? 'register' : 'login';
+}
+
+/** Input password dengan tombol lihat/sembunyikan. */
+function PasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  autoComplete,
+  placeholder,
+  minLength,
+  error
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  autoComplete: string;
+  placeholder: string;
+  minLength?: number;
+  error?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className={`input${error ? ' error' : ''}`} data-field="password">
+      <label htmlFor={id}>{label}</label>
+      <div className="auth-password">
+        <input
+          id={id}
+          type={visible ? 'text' : 'password'}
+          autoComplete={autoComplete}
+          placeholder={placeholder}
+          minLength={minLength}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          required
+        />
+        <button
+          type="button"
+          aria-label={visible ? 'Hide password' : 'Show password'}
+          aria-pressed={visible}
+          onClick={() => setVisible(!visible)}
+        >
+          <Icon name={visible ? 'eye-off' : 'eye'} />
+        </button>
+      </div>
+      {error && <small className="field-error">{error}</small>}
+    </div>
+  );
+}
+
+export function AuthPage() {
+  const { signIn, signUp, error: configError } = useAuth();
+  const [route, setRoute] = useState<AuthRoute>(getAuthRoute());
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [status, setStatus] = useState('');
+  const { errors, setErrors, clearError } = useFormErrors();
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const update = () => {
+      setRoute(getAuthRoute());
+      setStatus('');
+      setErrors({});
+      setPassword('');
+      setConfirm('');
+    };
+    window.addEventListener('hashchange', update);
+    return () => window.removeEventListener('hashchange', update);
+  }, []);
+
+  // `body.auth-route` yang membuat .auth-screen tampil (lihat css/auth.css).
+  useEffect(() => {
+    document.body.classList.add('auth-route');
+    return () => {
+      document.body.classList.remove('auth-route');
+      document.title = 'Mani App';
+    };
+  }, []);
+
+  // Judul tab mengikuti app vanilla: "Log in · Mani App" / "Register · Mani App".
+  useEffect(() => {
+    document.title = (route === 'login' ? 'Log in' : 'Register') + ' · Mani App';
+  }, [route]);
+
+  function showLoginAfterRegister(message: string) {
+    window.history.replaceState(null, '', '#/login');
+    setRoute('login');
+    setErrors({});
+    setPassword('');
+    setConfirm('');
+    setStatus(message);
+  }
+
+  async function submitLogin(event: React.FormEvent) {
+    event.preventDefault();
+    const next: Record<string, string> = {};
+    if (!email.trim()) next.email = 'Enter your email address.';
+    if (!password) next.password = 'Enter your password.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+
+    setStatus('');
+    setBusy(true);
+    try {
+      await signIn(email.trim(), password);
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : 'Could not log you in.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitRegister(event: React.FormEvent) {
+    event.preventDefault();
+    const next: Record<string, string> = {};
+    if (!name.trim()) next.name = 'Tell us what to call you.';
+    if (!email.trim()) next.email = 'Enter your email address.';
+    if (password.length < 8) next.password = 'Use at least 8 characters.';
+    if (confirm !== password) next.confirm = 'Both passwords must match.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+
+    setStatus('');
+    setBusy(true);
+    try {
+      const result = await signUp(name.trim(), email.trim(), password);
+      if (result === 'confirmation-required') {
+        showLoginAfterRegister(`We sent a confirmation link to ${email.trim()}. Confirm it, then log in below.`);
+      } else if (result === 'already-pending') {
+        showLoginAfterRegister(`This email is already registered but not confirmed. Check ${email.trim()} for the confirmation link. Login is unavailable until you confirm it.`);
+      } else if (result === 'already-confirmed' || result === 'already-exists') {
+        showLoginAfterRegister('This email is already registered. Please log in instead of creating another account.');
+      } else {
+        setStatus('');
+      }
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : 'Could not create your account.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="auth-screen" id="auth-screen">
+      <div className="auth-layout">
+        <main className="auth-content">
+          <div className="auth-mobile-brand">
+            <img src="/mani-app-logo.png" alt="" />
+            <span>Mani App</span>
+          </div>
+
+          <section className={`auth-panel${route === 'login' ? ' active' : ''}`} id="page-login" aria-labelledby="login-title">
+            <div className="auth-heading">
+              <span className="auth-overline">WELCOME BACK</span>
+              <h1 id="login-title">Log in to Mani</h1>
+              <p>Pick up where you left off with your money.</p>
+            </div>
+            <form className="auth-form" onSubmit={submitLogin} noValidate>
+              <div className={`input${errors.email ? ' error' : ''}`} data-field="email">
+                <label htmlFor="login-email">Email address</label>
+                <input
+                  id="login-email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => { setEmail(event.target.value); clearError('email'); setStatus(''); }}
+                  required
+                />
+                {errors.email && <small className="field-error">{errors.email}</small>}
+              </div>
+              <PasswordField
+                id="login-password"
+                label="Password"
+                value={password}
+                onChange={(value) => { setPassword(value); clearError('password', 'confirm'); setStatus(''); }}
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                error={errors.password}
+              />
+              <p className="auth-status" id="login-status" role="status" aria-live="polite">
+                {configError || status}
+              </p>
+              <button className="btn primary auth-submit" type="submit" disabled={busy}>
+                {busy ? 'Please wait…' : <>Log in <Icon name="arrow-right" /></>}
+              </button>
+            </form>
+            <p className="auth-switch">New to Mani? <a href="#/register">Create an account</a></p>
+            <p className="auth-local-note">
+              Your account is stored on the server, so the same email and password work on any device.
+            </p>
+          </section>
+
+          <section className={`auth-panel${route === 'register' ? ' active' : ''}`} id="page-register" aria-labelledby="register-title">
+            <div className="auth-heading">
+              <span className="auth-overline">GET STARTED</span>
+              <h1 id="register-title">Create your account</h1>
+              <p>A simple start to a clearer money picture.</p>
+            </div>
+            <form className="auth-form" onSubmit={submitRegister} noValidate>
+              <div className={`input${errors.name ? ' error' : ''}`} data-field="name">
+                <label htmlFor="register-name">Your name</label>
+                <input
+                  id="register-name"
+                  type="text"
+                  autoComplete="name"
+                  maxLength={40}
+                  placeholder="What should we call you?"
+                  value={name}
+                  onChange={(event) => { setName(event.target.value); clearError('name'); setStatus(''); }}
+                  required
+                />
+                {errors.name && <small className="field-error">{errors.name}</small>}
+              </div>
+              <div className={`input${errors.email ? ' error' : ''}`} data-field="email">
+                <label htmlFor="register-email">Email address</label>
+                <input
+                  id="register-email"
+                  type="email"
+                  autoComplete="email"
+                  inputMode="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => { setEmail(event.target.value); clearError('email'); setStatus(''); }}
+                  required
+                />
+                {errors.email && <small className="field-error">{errors.email}</small>}
+              </div>
+              <PasswordField
+                id="register-password"
+                label="Password"
+                value={password}
+                onChange={(value) => { setPassword(value); clearError('password', 'confirm'); setStatus(''); }}
+                autoComplete="new-password"
+                placeholder="At least 8 characters"
+                minLength={8}
+                error={errors.password}
+              />
+              <PasswordField
+                id="register-confirm"
+                label="Confirm password"
+                value={confirm}
+                onChange={(value) => { setConfirm(value); clearError('confirm'); setStatus(''); }}
+                autoComplete="new-password"
+                placeholder="Enter your password again"
+                error={errors.confirm}
+              />
+              <p className="auth-status" id="register-status" role="status" aria-live="polite">
+                {configError || status}
+              </p>
+              <button className="btn primary auth-submit" type="submit" disabled={busy}>
+                {busy ? 'Please wait…' : <>Create account <Icon name="arrow-right" /></>}
+              </button>
+            </form>
+            <p className="auth-switch">Already have an account? <a href="#/login">Log in</a></p>
+            <p className="auth-local-note">
+              One account per email. Your wallets, categories, and transactions are tied to this account.
+            </p>
+          </section>
+        </main>
+      </div>
+    </div>
+  );
+}

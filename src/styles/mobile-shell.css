@@ -1,0 +1,801 @@
+/* ============================================================
+   mobile-shell.css — Mani App dikunci ke tampilan mobile.
+
+   PRD menetapkan produk ini mobile-first, jadi di layar lebar pun
+   aplikasi tetap tampil sebagai app mobile yang dipusatkan, bukan
+   melebar menjadi layout desktop. Bagian pertama file ini adalah
+   aturan responsif mobile (breakpoint 1020/740/480) yang di-"unwrap"
+   supaya berlaku di semua lebar layar; bagian kedua mengatur frame
+   aplikasinya. Dimuat setelah design-system.css & app.css.
+   ============================================================ */
+
+:root { --app-width: 430px }
+
+/* ------------------------------------------------------------
+   1. Aturan responsif mobile, berlaku di semua lebar layar
+   ------------------------------------------------------------ */
+/* css/design-system.css @media(max-width:480px) */
+.date-picker.open{flex-basis:auto}.date-picker.open .date-popover{width:100%;max-width:none}
+
+/* css/design-system.css @media(max-width:1020px) */
+.shell{grid-template-columns:215px 1fr}.content{padding-right:22px;padding-left:22px}.hero-grid,.dashboard-grid{grid-template-columns:1fr}
+
+/* css/design-system.css @media(max-width:740px) */
+.shell{display:block}.sidebar{display:none}.content{padding:23px 16px 100px}.topbar{display:block}.top-actions{margin-top:17px}.top-actions .btn{flex:1}.service-rail{grid-template-columns:repeat(2,1fr);gap:9px}.service-tile{min-height:63px;padding:9px}.service-icon{flex-basis:38px;width:38px;height:38px;border-radius:13px}.service-tile small{font-size:9px}.mobile-nav{position:fixed;right:12px;bottom:12px;left:12px;z-index:40;display:grid;grid-template-columns:repeat(5,1fr);padding:7px;border:1px solid #e0e8e0;border-radius:20px;background:rgba(255,255,255,.94);box-shadow:var(--float);backdrop-filter:blur(12px)}.mobile-nav a{display:grid;justify-items:center;min-height:43px;padding-top:4px;border-radius:14px;color:var(--muted);font-size:10px;font-weight:750}.mobile-nav a.active{background:var(--mint);color:var(--green)}.mobile-nav b{font-size:17px;line-height:19px}.component-grid{grid-template-columns:1fr}.wide{grid-column:auto}.section{margin-top:38px}.section-head{display:block}.section-head .controls{margin-top:13px}.chart-grid{grid-template-columns:1fr;justify-items:center}.legend{width:100%}
+
+/* css/design-system.css @media(max-width:480px) */
+.hero,.card{padding:18px;border-radius:21px}.wallet-grid{grid-template-columns:1fr}.quick-actions{gap:5px}.quick{font-size:11px}.form-grid{grid-template-columns:1fr}.full{grid-column:auto}.filter-row{display:grid;grid-template-columns:1fr 1fr}.filter-row input{grid-column:1/-1;min-width:0;width:100%}.filter-row select,.filter-row .btn{width:100%;padding-right:7px;padding-left:7px}.filter-dropdown{min-width:0}.date-picker{width:100%}.date-trigger{width:100%;justify-content:center}.filter-trigger{font-size:12px;padding-right:10px;padding-left:10px}.token-grid{grid-template-columns:repeat(2,1fr)}.type-row{display:grid;gap:3px}.type-name{width:auto}.modal-foot{flex-direction:column-reverse}.modal-foot .btn{width:100%}
+
+/* css/design-system.css @media(max-width:740px) */
+.icon-library{grid-template-columns:1fr}.icon-grid{grid-template-columns:repeat(6,1fr)}.category-icon-grid{grid-template-columns:repeat(2,1fr)}
+
+/* css/design-system.css @media(max-width:480px) */
+.icon-grid{grid-template-columns:repeat(4,1fr)}.category-icon-grid{grid-template-columns:1fr}
+
+/* css/app.css @media(max-width:740px) */
+.toast-stack { right: 12px; bottom: 82px; left: 12px; width: auto }
+
+/* css/app.css @media(max-width:1020px) */
+.grid-2 { grid-template-columns: 1fr }
+
+/* css/app.css @media(max-width:740px) */
+.grid-3 { grid-template-columns: 1fr }
+  .stat-grid { grid-template-columns: 1fr 1fr }
+  .stat-grid .stat:last-child:nth-child(odd) { grid-column: 1 / -1 }
+  .topbar-actions-mobile { display: flex; gap: 8px; }
+  .period-nav strong { font-size: 13px }
+
+/* css/app.css @media(max-width:480px) */
+.chart-box { height: 210px }
+  /* Judul + link "Kelola/Lihat semua" tetap sebaris; tombol CTA & segmented turun full-width */
+  .card-head { flex-wrap: wrap; align-items: center }
+  .card-head > div:first-child { flex: 1 1 auto; min-width: 0 }
+  .card-head > .btn.ghost { flex: 0 0 auto; padding: 0; min-height: 0; white-space: nowrap }
+  .card-head > .btn:not(.ghost) { flex: 1 0 100%; width: 100% }
+  .card-head > .segmented { flex: 1 0 100% }
+  .transaction { grid-template-columns: 38px minmax(0, 1fr) auto }
+
+/* css/app.css @media(max-width:740px) */
+.monthly .mini-grid + div .divider { display: none }
+  .monthly .mini-grid + div { margin-top: 4px }
+
+/* css/app.css @media(max-width:480px) */
+/* Semua kontrol filter jadi grid dua kolom yang seragam tingginya */
+  .filter-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px }
+  .filter-row > input[type="search"] { grid-column: 1 / -1; width: 100% }
+  .filter-row .filter-dropdown,
+  .filter-row .date-picker { width: 100%; min-width: 0 }
+  .filter-row .date-trigger {
+    justify-content: flex-start;
+    gap: 8px;
+    min-height: 43px;
+    padding: 0 13px;
+    border-radius: 13px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  /* Reset filter jadi aksi selebar baris, bukan link menggantung di kiri */
+  .filter-row > .btn.ghost { grid-column: 1 / -1; min-height: 40px }
+
+  /* Pager: label dapat barisnya sendiri supaya tidak terpotong */
+  .pager { display: grid; grid-template-columns: 1fr 1fr; gap: 8px }
+  .pager small { grid-row: 1; grid-column: 1 / -1; text-align: center }
+  .pager .btn { grid-row: 2; width: 100% }
+
+
+/* ------------------------------------------------------------
+   2. Frame aplikasi
+   ------------------------------------------------------------ */
+/* Scrollbar selalu dicadangkan, apa pun tinggi konten halaman — tanpa ini,
+   halaman pendek (mis. Wallets) tidak memakai scrollbar sedangkan halaman
+   panjang (Dashboard/Statistics) memakainya, membuat .shell yang di-center
+   dengan margin:auto bergeser beberapa piksel setiap ganti halaman. */
+html { scrollbar-gutter: stable }
+body { background: #eef1ee }
+.shell {
+  display: block;
+  width: 100%;
+  max-width: var(--app-width);
+  min-height: 100vh;
+  min-height: 100dvh;
+  margin: 0 auto;
+  background: var(--canvas);
+  box-shadow: 0 0 0 1px rgba(31, 52, 38, .06), 0 18px 60px rgba(31, 52, 38, .12);
+}
+.sidebar { display: none }
+
+/* Elemen fixed mengikuti lebar frame, bukan lebar viewport */
+.mobile-nav {
+  right: auto;
+  left: 50%;
+  width: min(calc(var(--app-width) - 24px), calc(100vw - 24px));
+  transform: translateX(-50%);
+}
+.toast-stack {
+  right: auto;
+  left: 50%;
+  width: min(calc(var(--app-width) - 24px), calc(100vw - 24px));
+  transform: translateX(-50%);
+}
+.modal { width: min(calc(var(--app-width) - 32px), 100%) }
+
+/* Popover tanggal tetap melayang selebar kartu, bukan selebar layar.
+   Aturan mobile hasil unwrap di atas memaksa width:100% yang pada element
+   position:fixed berarti selebar viewport — dikembalikan di sini. */
+.date-picker.open .date-popover,
+.single-date-picker.open .date-popover,
+.modal .single-date-picker.open .date-popover {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  z-index: 60;
+  width: min(320px, calc(100vw - 24px));
+  max-width: none;
+  max-height: calc(100vh - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* Wallet di Home tampil sebagai grid dua kolom */
+#dashboard-wallets { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+#dashboard-wallets .wallet { padding: 14px }
+#dashboard-wallets .wallet-balance { margin: 12px 0 3px; font-size: 17px }
+#dashboard-wallets .wallet-name { gap: 6px; font-size: 13px }
+#dashboard-wallets .wallet-icon { width: 28px; height: 28px; border-radius: 9px }
+#dashboard-wallets .wallet-icon .svg-icon { width: 15px; height: 15px }
+#dashboard-wallets .wallet-meta { font-size: 10px }
+#dashboard-wallets .wallet-menu { width: 26px; height: 26px }
+#dashboard-wallets .wallet-menu .svg-icon { width: 15px; height: 15px }
+
+/* ------------------------------------------------------------
+   3. Daftar transaksi — baris ringkas, seluruh baris bisa di-tap
+   ------------------------------------------------------------ */
+.transaction {
+  width: 100%;
+  min-height: 62px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  text-align: left;
+  transition: background .16s;
+}
+.transactions .transaction:last-child { border-bottom: 0 }
+.transaction:hover { background: #fafcfa }
+.transaction:active { background: #f2f7f2 }
+.transaction-body { display: grid; gap: 3px; min-width: 0 }
+.transaction-title { font-size: 13px; font-weight: 700 }
+.transaction-meta { font-size: 11px }
+.transaction-amount { align-self: center; font-size: 13px; font-weight: 800; white-space: nowrap }
+.transaction-icon { width: 38px; height: 38px; border-radius: 12px; font-size: 17px }
+
+/* Kelompok tanggal: header bisa di-tap untuk buka/tutup isinya */
+#tx-list { padding-top: 8px }
+.tx-date-group { margin-top: 12px }
+.tx-date-group:first-child { margin-top: 4px }
+.tx-date-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  text-align: left;
+  transition: background .16s;
+}
+.tx-date-label:hover { background: #f4f7f4 }
+.tx-date-chevron { display: grid; place-items: center; color: var(--green); transition: transform .18s }
+.tx-date-chevron .svg-icon { width: 17px; height: 17px; stroke-width: 2 }
+.tx-date-group.collapsed .tx-date-chevron { transform: rotate(-90deg) }
+.tx-date-group.collapsed .transactions { display: none }
+.tx-date-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.tx-date-title small {
+  display: block;
+  margin-top: 2px;
+  color: #98a29b;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.tx-date-label .num { color: #56605a; font-size: 12px; font-weight: 800; letter-spacing: 0 }
+
+/* Pager: tetap tersembunyi saat hanya ada satu halaman */
+.pager[hidden] { display: none }
+.pager .btn { min-height: 36px; font-size: 12px }
+.pager small { font-size: 11px }
+
+/* Tombol hapus di modal transaksi */
+.danger-ghost { background: transparent; color: var(--red) }
+.danger-ghost:hover { background: var(--red-soft) }
+
+/* ------------------------------------------------------------
+   4. Filter transaksi — search + chip yang bisa di-scroll
+   ------------------------------------------------------------ */
+.tx-filters { display: grid; gap: 10px; margin-bottom: 14px }
+.filter-search-row { display: flex; align-items: stretch; gap: 8px }
+.filter-search-row > input[type="search"] {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding-left: 38px;
+  border: 1px solid #e3e9e3;
+  border-radius: var(--pill);
+  background-color: #f7faf7;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23667069' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6'/%3E%3Cpath d='m15.5 15.5 4 4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 13px center;
+  font-size: 13px;
+}
+.filter-search-row > input[type="search"]:focus {
+  border-color: #8bd39a;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(139, 211, 154, .18);
+  outline: none;
+}
+.filter-search-row .chip-reset {
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 0 13px;
+  border: 1px solid #dfe8df;
+  border-radius: var(--pill);
+  background: #fff;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.filter-search-row .chip-reset:hover { background: var(--mint); border-color: #9bdca5 }
+.filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  margin: 0 -18px;
+  padding: 2px 18px 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.filter-chips::-webkit-scrollbar { display: none }
+.filter-chips > * { flex: 0 0 auto }
+.filter-chips .filter-dropdown,
+.filter-chips .date-picker { min-width: 0; width: auto }
+.filter-chips .filter-trigger,
+.filter-chips .date-trigger {
+  gap: 6px;
+  width: auto;
+  min-width: 0;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: var(--pill);
+  background: #f7faf7;
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.filter-chips .filter-trigger[data-value]:not([data-value=""]) {
+  border-color: #9bdca5;
+  background: var(--mint);
+  color: var(--green);
+}
+.filter-chips .filter-menu {
+  right: auto;
+  left: 0;
+  z-index: 60;
+  width: 220px;
+  min-width: 190px;
+  max-width: calc(100vw - 24px);
+  max-height: min(320px, calc(100vh - 24px));
+  overflow-y: auto;
+}
+.chip-reset {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #e3e9e3;
+  border-radius: var(--pill);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------
+   5. Daftar transaksi — lebih lega, tanpa garis kaku
+   ------------------------------------------------------------ */
+.transaction {
+  gap: 12px;
+  padding: 9px 10px;
+  border-bottom: 0;
+  border-radius: 16px;
+}
+.transactions { gap: 2px }
+.transaction:hover { background: #f5f9f5 }
+.transaction:active { transform: scale(.985) }
+.transaction-icon { border-radius: 14px; background: #f2f6f2 }
+.tx-date-group + .tx-date-group { border-top: 1px solid var(--line); padding-top: 4px }
+
+/* ------------------------------------------------------------
+   6. Laporan per kategori — bisa dibuka untuk melihat itemnya
+   ------------------------------------------------------------ */
+.breakdown { display: grid; gap: 4px }
+.breakdown-row { display: grid; gap: 7px; padding: 10px; border-radius: 16px; transition: background .16s }
+.breakdown-row.open { background: #f7faf7 }
+.breakdown-top {
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: 9px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+}
+.breakdown-label { min-width: 0 }
+.breakdown-name { display: block; overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap }
+.breakdown-label small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px }
+.breakdown-value { font-size: 12px; font-weight: 800; white-space: nowrap }
+.breakdown-chevron { display: grid; place-items: center; color: var(--muted); transition: transform .18s }
+.breakdown-chevron .svg-icon { width: 16px; height: 16px; stroke-width: 2 }
+.breakdown-row.open .breakdown-chevron { transform: rotate(180deg); color: var(--green) }
+.breakdown-items { display: none; gap: 2px; margin-top: 2px; padding-top: 6px; border-top: 1px dashed #dfe6df }
+.breakdown-row.open .breakdown-items { display: grid }
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  text-align: left;
+}
+.breakdown-item:hover { background: #fff }
+.breakdown-item-body { min-width: 0 }
+.breakdown-item-title { display: block; overflow: hidden; font-size: 12px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap }
+.breakdown-item-body small { display: block; margin-top: 2px; color: var(--muted); font-size: 10px }
+.breakdown-item-amount { color: var(--red); font-size: 12px; font-weight: 750; white-space: nowrap }
+.breakdown-empty { margin: 6px 0 0; color: var(--muted); font-size: 11px }
+
+/* ------------------------------------------------------------
+   7. Empty state beranimasi
+   ------------------------------------------------------------ */
+.empty { padding: 26px 12px }
+.empty-art {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 108px;
+  height: 108px;
+  margin: 0 auto 14px;
+}
+.empty-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid rgba(0, 143, 29, .22);
+  border-radius: 50%;
+  animation: empty-pulse 2.8s ease-out infinite;
+}
+.empty-ring:nth-of-type(2) { animation-delay: 1.4s }
+.empty-blob {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  border-radius: 26px;
+  background: var(--mint);
+  animation: empty-float 3.4s ease-in-out infinite;
+}
+.empty-art .empty-icon {
+  position: relative;
+  width: 68px;
+  height: 68px;
+  margin: 0;
+  border-radius: 26px;
+  background: transparent;
+  animation: empty-float 3.4s ease-in-out infinite;
+}
+.empty-art .empty-icon .svg-icon { width: 28px; height: 28px; stroke-width: 1.6 }
+.empty-spark {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--green-light, #c9f27d);
+  opacity: 0;
+  animation: empty-spark 3.4s ease-in-out infinite;
+}
+.empty-spark-a { top: 12px; left: 14px }
+.empty-spark-b { top: 24px; right: 10px; width: 5px; height: 5px; animation-delay: .8s }
+.empty-spark-c { bottom: 16px; left: 24px; width: 5px; height: 5px; animation-delay: 1.6s }
+.empty h3 { animation: empty-rise .45s .05s both }
+.empty p { animation: empty-rise .45s .14s both }
+.empty .btn { animation: empty-rise .45s .22s both }
+
+@keyframes empty-pulse {
+  0% { transform: scale(.62); opacity: .85 }
+  70% { opacity: 0 }
+  100% { transform: scale(1); opacity: 0 }
+}
+@keyframes empty-float {
+  0%, 100% { transform: translateY(0) }
+  50% { transform: translateY(-7px) }
+}
+@keyframes empty-spark {
+  0%, 100% { transform: translateY(4px) scale(.6); opacity: 0 }
+  45% { transform: translateY(-4px) scale(1); opacity: .9 }
+}
+@keyframes empty-rise {
+  from { transform: translateY(8px); opacity: 0 }
+  to { transform: none; opacity: 1 }
+}
+@media (prefers-reduced-motion: reduce) {
+  .empty-ring, .empty-blob, .empty-art .empty-icon, .empty-spark,
+  .empty h3, .empty p, .empty .btn { animation: none }
+  .empty-spark { opacity: .8 }
+}
+
+/* ------------------------------------------------------------
+   8. Halaman Wallets — daftar baris (grid ringkas tetap di Home)
+   ------------------------------------------------------------ */
+#wallets-list { display: grid; gap: 2px }
+.wallet-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  padding: 10px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  text-align: left;
+  transition: background .16s, transform .16s;
+}
+.wallet-row:hover { background: #f5f9f5 }
+.wallet-row:active { transform: scale(.985) }
+.wallet-row .wallet-icon { width: 40px; height: 40px; border-radius: 14px; background: var(--mint); color: var(--green) }
+.wallet-row .wallet-icon .svg-icon { width: 19px; height: 19px }
+.wallet-row-body { display: grid; gap: 3px; min-width: 0 }
+.wallet-row-name { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap }
+.wallet-row-body small { color: var(--muted); font-size: 11px }
+.wallet-row-balance { font-size: 14px; font-weight: 700; white-space: nowrap }
+.wallet-row.negative .wallet-row-balance { color: var(--red) }
+.wallet-row.negative .wallet-row-body small:after {
+  content: " · saldo minus";
+  color: var(--red);
+}
+.wallet-row-chevron { display: grid; place-items: center; color: #b7c2b9 }
+.wallet-row-chevron .svg-icon { width: 15px; height: 15px }
+.add-wallet-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 68px;
+  margin-top: 6px;
+  padding: 10px;
+  border: 1px dashed #cfe0d2;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--green);
+  text-align: left;
+}
+.add-wallet-row:hover { background: #f5f9f5 }
+.add-wallet-row .wallet-icon { width: 40px; height: 40px; border-radius: 14px; background: #eef8ef; color: var(--green) }
+.add-wallet-row .wallet-row-name { color: var(--green) }
+/* Tombol modal: sebaris dan selebar isinya, bukan tumpukan full-width
+   (aturan mobile bawaan memaksa column-reverse + width:100% — dibatalkan di sini) */
+.modal-foot {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.modal-foot .btn {
+  width: auto;
+  min-height: 42px;
+  padding: 0 18px;
+  font-size: 13px;
+}
+/* Aksi destruktif dipisah ke kiri supaya tidak bersebelahan dengan tombol simpan */
+#transaction-modal .modal-foot .danger-ghost,
+#wallet-modal .modal-foot .danger-ghost { order: -1; margin-right: auto; padding-left: 0 }
+
+/* Empty state di dalam chart: beri ruang, jangan terjepit tinggi chart */
+.chart-box:has(.chart-empty) { height: auto; min-height: 0 }
+.chart-empty { padding: 10px 0 }
+.chart-empty .empty { padding: 22px 12px 26px }
+.chart-empty .empty-art { margin-bottom: 18px }
+
+/* ------------------------------------------------------------
+   9. Kategori arsip — tetap menjaga histori transaksi
+   ------------------------------------------------------------ */
+.category-archive { margin-top: 14px; padding-top: 12px; border-top: 1px dashed #dfe6df }
+.category-archive-head {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.category-row.archived .category-icon { background: #f1f3f1; filter: grayscale(.45); opacity: .85 }
+.category-row.archived strong { color: #6b7570 }
+.category-restore { min-height: 32px; padding: 0 12px; font-size: 12px }
+
+/* ------------------------------------------------------------
+   10. Detail wallet — ringkasan saldo & riwayat transaksi
+   ------------------------------------------------------------ */
+/* [hidden] wajib menang atas display milik komponen (mis. .btn, .pager)
+   supaya elemen yang disembunyikan lewat JS benar-benar tidak tampil */
+[hidden] { display: none !important }
+
+.wallet-detail-heading { display: flex; align-items: center; gap: 12px; min-width: 0 }
+.wallet-detail-heading .wallet-icon {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  background: var(--mint);
+  color: var(--green);
+}
+.wallet-detail-heading .wallet-icon .svg-icon { width: 22px; height: 22px }
+.wallet-detail-heading h2 { margin: 0; font-size: 18px }
+.wallet-detail-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px }
+
+/* Kartu saldo mengikuti gaya hero di Home: gradient hijau tua + lingkaran dekoratif */
+.wallet-detail-balance {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  border-radius: 22px;
+  background: linear-gradient(135deg, #006d1b 0%, #008f1d 55%, #2bab4a 140%);
+  color: #fff;
+  box-shadow: var(--shadow);
+}
+.wallet-detail-balance:after {
+  position: absolute;
+  right: -55px;
+  bottom: -75px;
+  width: 190px;
+  height: 190px;
+  border: 24px solid rgba(223, 255, 131, .18);
+  border-radius: 50%;
+  content: "";
+}
+.wallet-detail-balance > * { position: relative; z-index: 1 }
+.wallet-detail-balance small { display: block; color: #d7f3da; font-size: 12px }
+.wallet-detail-balance strong { display: block; margin-top: 8px; font-size: 32px; letter-spacing: -.04em }
+
+.wallet-detail-history-section { display: flex; flex-direction: column; gap: 10px }
+.wallet-detail-history-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.wallet-detail-history-head h3 { margin: 0; font-size: 15px }
+.wallet-detail-history-head p { margin: 3px 0 0; color: var(--muted); font-size: 11px }
+.wallet-detail-history-head .btn { flex: 0 0 auto; min-height: 30px; padding: 0 2px; font-size: 12px }
+.wallet-detail-history .empty { padding: 18px 8px 8px }
+
+/* ------------------------------------------------------------
+   Revisi tampilan: bobot huruf lebih tenang, hero lebih ringkas,
+   dan tombol modal satu baris.
+   ------------------------------------------------------------ */
+
+/* Angka saldo tidak perlu setebal sebelumnya — kontras warna & ukuran sudah cukup */
+.wallet-name { font-weight: 600 }
+#dashboard-wallets .wallet-balance { margin: 10px 0 3px; font-size: 16px; font-weight: 700 }
+#wallets-total { font-weight: 750 }
+
+/* Hero: kartu lebih pendek dan angka saldo tidak mendominasi layar */
+.hero { min-height: 0; padding: 20px }
+.hero:after { right: -80px; bottom: -120px; width: 240px; height: 240px; border-width: 28px }
+.hero-top { align-items: center; font-size: 12px }
+.hero-label { display: inline-flex; align-items: center; gap: 8px }
+.hero-eye {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, .28);
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .14);
+  color: #fff;
+  cursor: pointer;
+}
+.hero-eye:hover { background: rgba(255, 255, 255, .24) }
+.hero-eye .svg-icon { width: 15px; height: 15px }
+.hero-amount { margin: 14px 0 4px; font-size: 30px; font-weight: 800; letter-spacing: -.045em }
+.quick-actions { margin-top: 18px; gap: 6px }
+.quick { min-height: 56px; padding: 7px 4px; border-radius: 13px }
+.quick b .svg-icon { width: 18px; height: 18px }
+
+/* Aksi wallet (ubah/hapus) tinggal di header modal detail */
+.wallet-detail-actions { display: flex; flex: 0 0 auto; align-items: center; gap: 4px }
+.wallet-detail-actions .icon-btn { flex: 0 0 38px; width: 38px; height: 38px }
+.wallet-detail-actions .icon-btn .svg-icon { width: 17px; height: 17px }
+.icon-btn.danger { color: var(--red) }
+.icon-btn.danger:hover { background: #fdeceb }
+
+/* Footer modal: garis pemisah konsisten di semua modal, tombol tetap satu baris */
+.modal-foot {
+  flex-wrap: nowrap;
+  align-items: center;
+  border-top: 1px solid var(--line);
+}
+.modal-foot .btn { flex: 0 0 auto; padding: 0 16px; white-space: nowrap }
+.modal-foot .danger-ghost {
+  order: -1;
+  margin-right: auto;
+  min-width: 82px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--pill);
+  font-size: 12.5px;
+}
+.modal-foot .danger-ghost:hover { background: #fdeceb; border-color: #f7caca; }
+.modal-foot .danger-ghost:active { background: #fbd8d8; }
+#transaction-modal .modal-foot .danger-ghost,
+#wallet-modal .modal-foot .danger-ghost { padding: 0 14px; }
+
+/* ------------------------------------------------------------
+   Navigasi: Home / Transaksi / Statistik / Profil.
+   Wallet & kategori pindah ke halaman profil sebagai menu.
+   ------------------------------------------------------------ */
+.mobile-nav { grid-template-columns: repeat(4, 1fr) }
+
+/* Topbar ala Gojek: baris tipis berisi brand + avatar, lalu judul halaman */
+.topbar { margin-bottom: 22px }
+.topbar-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  margin-bottom: 12px;
+}
+.topbar-bar .eyebrow { flex: 1 1 auto; margin: 0 }
+.topbar-back {
+  display: grid;
+  flex: 0 0 36px;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: #465049;
+  cursor: pointer;
+}
+.topbar-back:hover { background: var(--mint); color: var(--green) }
+.topbar-back .svg-icon { width: 17px; height: 17px }
+.topbar-profile { display: grid; flex: 0 0 auto; place-items: center; text-decoration: none }
+.topbar-avatar {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 800;
+}
+.topbar-profile:hover .topbar-avatar { background: #005c16 }
+.topbar-heading h1 { font-size: 30px }
+.topbar-heading p { margin-top: 6px; font-size: 13px }
+
+/* Menu profil: baris besar yang mudah di-tap, sejalan dengan baris wallet */
+.menu-list { display: grid; gap: 2px }
+.menu-row {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 64px;
+  padding: 10px;
+  border: 0;
+  border-radius: 16px;
+  background: transparent;
+  text-align: left;
+  transition: background .16s, transform .16s;
+}
+.menu-row:hover { background: #f5f9f5 }
+.menu-row:active { transform: scale(.985) }
+.menu-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: var(--mint);
+  color: var(--green);
+}
+.menu-icon .svg-icon { width: 19px; height: 19px }
+.menu-body { display: grid; gap: 3px; min-width: 0 }
+.menu-body strong { overflow: hidden; font-size: 13px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap }
+.menu-body small { color: var(--muted); font-size: 11px }
+.menu-chevron { display: grid; place-items: center; color: #b7c2b9 }
+.menu-chevron .svg-icon { width: 15px; height: 15px }
+
+/* ------------------------------------------------------------
+   Profil: avatar bundar yang bisa diganti fotonya.
+   ------------------------------------------------------------ */
+.profile-summary { align-items: center; gap: 14px }
+.profile-photo {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  line-height: 0;
+}
+/* Avatar mana pun (app bar & profil) memakai aturan foto yang sama:
+   tanpa ini, foto 256px dirender ukuran asli di kotak 38px. */
+.profile-avatar,
+.topbar-avatar {
+  border-radius: 50%;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+.profile-avatar.has-photo,
+.topbar-avatar.has-photo { background-color: var(--canvas); color: transparent }
+.profile-photo-badge {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--green);
+  color: #fff;
+}
+.profile-photo-badge .svg-icon { width: 10px; height: 10px; stroke-width: 2 }
+.profile-identity { display: grid; flex: 1 1 auto; gap: 3px; min-width: 0 }
+.profile-identity strong { overflow: hidden; font-size: 15px; text-overflow: ellipsis; white-space: nowrap }
+.profile-identity strong.is-placeholder { color: var(--muted); font-weight: 600 }
+.profile-identity small { margin: 0; color: var(--muted); font-size: 11px }
+.profile-summary > .icon-btn { flex: 0 0 38px; width: 38px; height: 38px }
+.profile-summary > .icon-btn .svg-icon { width: 17px; height: 17px }
+
+/* Baris menu bernuansa destruktif (reset data) */
+.menu-row.danger .menu-icon { background: #fdeceb; color: var(--red) }
+.menu-row.danger .menu-body strong { color: var(--red) }
+
+/* Modal edit profil */
+.profile-photo-field { display: flex; align-items: center; gap: 16px; margin-bottom: 18px }
+.profile-avatar-lg {
+  flex: 0 0 76px;
+  width: 76px;
+  height: 76px;
+  font-size: 28px;
+}
+.profile-photo-actions { display: grid; gap: 8px; min-width: 0 }
+.profile-photo-actions .controls { gap: 8px }
+.profile-photo-actions .btn { min-height: 38px; padding: 0 14px; font-size: 12.5px }
+.profile-photo-actions .btn .svg-icon { width: 15px; height: 15px }
+.profile-photo-actions small { color: var(--muted); font-size: 11px; line-height: 1.5 }
