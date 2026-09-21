@@ -47,13 +47,15 @@ export function EmptyState({
   title = 'Nothing here yet',
   message = '',
   actionLabel,
-  onAction
+  onAction,
+  actionDisabled = false
 }: {
   icon?: IconName;
   title?: string;
   message?: string;
   actionLabel?: string;
   onAction?: () => void;
+  actionDisabled?: boolean;
 }) {
   return (
     <div className="empty">
@@ -69,7 +71,7 @@ export function EmptyState({
       <h3>{title}</h3>
       <p>{message}</p>
       {actionLabel && onAction && (
-        <button className="btn primary" type="button" onClick={onAction}>{actionLabel}</button>
+        <button className="btn primary" type="button" disabled={actionDisabled} onClick={onAction}>{actionLabel}</button>
       )}
     </div>
   );

@@ -5,7 +5,7 @@ import { UiProvider, ToastStack, useUi } from './context/UiContext';
 import { AppShell, ShellFrame, getRoute, type Route } from './components/AppShell';
 import { IconSprite, Icon } from './components/IconSprite';
 import { ModalHost } from './components/Modals';
-import { Loading, PageSkeleton } from './components/Ui';
+import { EmptyState, Loading, PageSkeleton } from './components/Ui';
 import { AuthPage } from './pages/AuthPage';
 
 const PAGES = {
@@ -40,10 +40,10 @@ function AuthenticatedApp() {
   return (
     <>
       <AppShell route={route}>
-        {error && (
+        {error && initialized && (
           <div className="alert danger">
             <span><Icon name="alert" /></span>
-            <div><strong>Could not load your data</strong>{error}</div>
+            <div><strong>Could not refresh your data</strong>{error}</div>
             <button type="button" className="btn secondary" disabled={loading} onClick={() => void refresh().catch(() => {})}>Try again</button>
           </div>
         )}
@@ -52,6 +52,15 @@ function AuthenticatedApp() {
             <Suspense key={route} fallback={<><PageSkeleton />{!loading && <Loading />}</>}>
               <Page />
             </Suspense>
+          ) : error ? (
+            <EmptyState
+              icon="alert"
+              title="Could not load your data"
+              message={error}
+              actionLabel={loading ? 'Retrying…' : 'Try again'}
+              actionDisabled={loading}
+              onAction={() => void refresh().catch(() => {})}
+            />
           ) : loading ? <PageSkeleton /> : null}
         </div>
       </AppShell>
