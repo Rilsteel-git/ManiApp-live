@@ -17,8 +17,14 @@
    profil (jadi kayak "berubah hitam"). App ini sudah punya state
    :active/:hover sendiri di semua komponen, jadi feedback tap tetap ada
    tanpa overlay bawaan ini. */
+/* rgba(0,0,0,0) dipakai, bukan keyword `transparent` — sebagian WebKit
+   lama nggak konsisten menghormati keyword itu untuk elemen bulat/
+   overflow:hidden seperti avatar. */
 * {
-  -webkit-tap-highlight-color: transparent;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 /* iOS Safari auto-zoom saat fokus ke input kalau font-size-nya < 16px.
@@ -614,8 +620,30 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   content: "";
 }
 .wallet-detail-balance > * { position: relative; z-index: 1 }
-.wallet-detail-balance small { display: block; color: #d7f3da; font-size: 12px }
-.wallet-detail-balance strong { display: block; margin-top: 8px; font-size: 32px; letter-spacing: -.04em }
+.wallet-detail-balance small {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #d7f3da;
+  font-size: 12px;
+}
+/* 32px terasa oversized di layar sempit; diturunkan ke skala yang sejalan
+   dengan .hero-amount (30px) di Home, lalu dikecilkan lagi di bawah 380px
+   nyata (bukan lebar shell) supaya tetap muat rapi di HP paling sempit. */
+.wallet-detail-balance strong { display: block; margin-top: 8px; font-size: 28px; letter-spacing: -.04em }
+@media (max-width: 380px) {
+  .wallet-detail-balance strong { font-size: 25px }
+}
+
+/* Grid stat (Starting/Money in/Money out/Transfers) memakai .stat generik,
+   yang di app.css dipakai juga untuk ringkasan Statistik (18px/700) — pas
+   di sana, tapi di sini terasa terlalu berat & besar untuk 3-4 angka yang
+   berdempetan di kartu kecil. Selector di-scope ke .wallet-detail-stats
+   saja (spesifisitas sama-sama 1 kelas + 1 elemen dengan .stat small/strong
+   di app.css, jadi menang lewat urutan load — file ini dimuat terakhir)
+   supaya .stat di halaman lain tidak ikut berubah. */
+.wallet-detail-stats small { font-size: 11px }
+.wallet-detail-stats strong { margin-top: 5px; font-size: 15px; font-weight: 700; letter-spacing: -.02em }
 
 .wallet-detail-history-section { display: flex; flex-direction: column; gap: 10px }
 .wallet-detail-history-head {
@@ -734,7 +762,6 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   font-size: 15px;
   font-weight: 800;
 }
-.topbar-profile:hover .topbar-avatar { background: #005c16 }
 .topbar-heading h1 { font-size: 30px }
 .topbar-heading p { margin-top: 6px; font-size: 13px }
 
@@ -833,6 +860,12 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   font-size: 28px;
 }
 .profile-photo-actions { display: grid; gap: 8px; min-width: 0 }
+/* "Remove" duduk di sebelah kanan "Upload photo" (baris, bukan tumpukan).
+   Base .controls sudah flex + wrap + gap:9px, jadi cukup diwarisi — cuma
+   gap-nya disamakan dengan versi lama (8px). flex-wrap:wrap bawaan tetap
+   jadi jaring pengaman: kalau di layar sesempit 320px kedua tombol nggak
+   muat sebaris (avatar 76px + gap 16px di sebelah kiri memangkas ruang),
+   "Remove" otomatis turun ke baris berikutnya, bukan overflow/clipping. */
 .profile-photo-actions .controls { gap: 8px }
 .profile-photo-actions .btn { min-height: 38px; padding: 0 14px; font-size: 12.5px }
 .profile-photo-actions .btn .svg-icon { width: 15px; height: 15px }

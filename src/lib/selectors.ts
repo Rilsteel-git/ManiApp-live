@@ -9,6 +9,7 @@ import type {
   Totals,
   Transaction,
   TransactionFilters,
+  TransferPeer,
   Wallet,
   WalletDetail,
   WalletType,
@@ -97,9 +98,13 @@ export function inRange(list: Transaction[], from: string, to: string): Transact
   });
 }
 
+/** Transfer legs move money between your own wallets — they're not real
+ *  income/expense, so they're excluded here (every caller of totals()
+ *  inherits this: dashboard, transactions list, stats). */
 export function totals(list: Transaction[]): Totals {
   return list.reduce<Totals>(
     (acc, tx) => {
+      if (tx.isTransfer) return acc;
       if (tx.type === 'income') acc.income += tx.amount;
       else acc.expense += tx.amount;
       acc.net = acc.income - acc.expense;
@@ -150,6 +155,18 @@ export function walletDetail(
   const meta = walletTypeMeta(wallet.type);
   const list = sortTransactions(transactions.filter((tx) => tx.walletId === walletId));
   const sums = totals(list);
+  // Money in/out sengaja cuma menghitung transaksi eksternal (lihat totals()),
+  // jadi mutasi antar wallet sendiri dilaporkan terpisah supaya saldo tetap
+  // bisa ditelusuri: saldo awal + masuk − keluar + transfer bersih = saldo.
+  const transfers = list.reduce(
+    (acc, tx) => {
+      if (!tx.isTransfer) return acc;
+      if (tx.type === 'income') acc.in += tx.amount;
+      else acc.out += tx.amount;
+      return acc;
+    },
+    { in: 0, out: 0 }
+  );
 
   return {
     ...wallet,
@@ -159,8 +176,36 @@ export function walletDetail(
     transactionCount: list.length,
     transactions: list,
     income: sums.income,
-    expense: sums.expense
+    expense: sums.expense,
+    transfersIn: transfers.in,
+    transfersOut: transfers.out
   };
+}
+
+/** Satu transfer = dua baris (keluar dari wallet A, masuk ke wallet B).
+ *  Di daftar gabungan, pasangannya ditampilkan sekali saja. */
+export function collapseTransfers(list: Transaction[]): Transaction[] {
+  const seen = new Set<string>();
+  return list.filter((tx) => {
+    if (!tx.isTransfer || !tx.transferPairId) return true;
+    if (seen.has(tx.transferPairId)) return false;
+    seen.add(tx.transferPairId);
+    return true;
+  });
+}
+
+/** Peta pasangan transfer → wallet asal & tujuan, supaya satu baris transfer
+ *  bisa menampilkan "Wallet A → Wallet B" walau yang dirender cuma satu leg. */
+export function transferPeers(transactions: Transaction[]): Map<string, TransferPeer> {
+  const map = new Map<string, TransferPeer>();
+  transactions.forEach((tx) => {
+    if (!tx.isTransfer || !tx.transferPairId) return;
+    const peer = map.get(tx.transferPairId) || { fromWalletId: null, toWalletId: null };
+    if (tx.type === 'income') peer.toWalletId = tx.walletId;
+    else peer.fromWalletId = tx.walletId;
+    map.set(tx.transferPairId, peer);
+  });
+  return map;
 }
 
 /** Kategori aktif (bisa dipilih untuk transaksi baru), urut sesuai `position`. */

@@ -85,7 +85,7 @@ export function breakdown(
   period: Period,
   type: TransactionType = 'expense'
 ): BreakdownRow[] {
-  const list = transactionsIn(transactions, period).filter((item) => item.type === type);
+  const list = transactionsIn(transactions, period).filter((item) => item.type === type && !item.isTransfer);
   const total = list.reduce((sum, item) => sum + item.amount, 0);
   const map = new Map<string, Omit<BreakdownRow, 'percent' | 'color'>>();
 

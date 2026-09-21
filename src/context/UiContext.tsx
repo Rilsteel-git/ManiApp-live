@@ -52,6 +52,7 @@ export type ActiveModal =
   | { kind: 'wallet-detail'; id: string }
   | { kind: 'category'; id?: string }
   | { kind: 'transaction'; id?: string; type?: TransactionType }
+  | { kind: 'transfer'; fromWalletId?: string }
   | { kind: 'profile' }
   | null;
 

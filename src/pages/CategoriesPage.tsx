@@ -10,9 +10,10 @@ import { useUi } from '../context/UiContext';
 import { categoriesByType, categoryTransactionCount } from '../lib/selectors';
 import { txCount } from '../lib/format';
 import { Icon } from '../components/IconSprite';
-import { EmptyState, Segmented } from '../components/Ui';
+import { EmptyState, Loading, Segmented } from '../components/Ui';
 import { useDeleteCategory } from '../components/Modals';
 import { useCategoryDrag } from '../hooks/useCategoryDrag';
+import { useIncrementalList } from '../hooks/useIncrementalList';
 
 export function CategoriesPage() {
   const { categories, transactions, restoreCategory, reorderCategories } = useAppData();
@@ -32,6 +33,14 @@ export function CategoriesPage() {
   const { order, containerRef, draggingId } = useCategoryDrag(activeIds, handleReorder);
   const sameSet = order.length === list.length && order.every((id) => list.some((category) => category.id === id));
   const orderedList = sameSet ? order.map((id) => list.find((category) => category.id === id)!) : list;
+  // Lima kategori per batch. Item lama tetap terlihat; hanya batch yang baru
+  // diminta lewat scroll yang menampilkan loader Mani sebelum ditambahkan.
+  const { visible, hasMore, loading, sentinel } = useIncrementalList(orderedList.length, 5, {
+    delayMs: 800,
+    resetKey: type,
+    rootMargin: '0px 0px 48px 0px'
+  });
+  const visibleList = orderedList.slice(0, visible);
 
   async function restore(id: string, name: string) {
     try {
@@ -58,7 +67,7 @@ export function CategoriesPage() {
         <div style={{ height: 16 }} />
         <div className="category-list" id="categories-list" ref={containerRef}>
           {list.length ? (
-            orderedList.map((category) => (
+            visibleList.map((category) => (
               <div
                 className={`category-row${draggingId === category.id ? ' dragging' : ''}`}
                 key={category.id}
@@ -107,6 +116,9 @@ export function CategoriesPage() {
               message="Add one so your transactions can be grouped neatly."
             />
           )}
+
+          {hasMore && <div className="incremental-list-sentinel" ref={sentinel} aria-hidden="true" />}
+          {loading && <Loading message="Memuat kategori berikutnya" />}
 
           {archived.length > 0 && (
             <div className="category-archive">

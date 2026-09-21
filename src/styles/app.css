@@ -10,6 +10,33 @@
    white-space: nowrap), kartu ikut melebar sampai lebih lebar dari layar. */
 .card { min-width: 0; }
 
+/* .wallet renders as a <button> when it's tappable (Dashboard's "Your
+   wallets"). Same Safari fallback-to-blue issue as .transaction/.menu-row
+   if color/appearance aren't reset explicitly. Scoped away from
+   .add-wallet, which intentionally inherits --green through .wallet-name. */
+.wallet {
+  width: 100%;
+  text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
+  font: inherit;
+}
+.wallet:not(.add-wallet) { color: inherit; }
+.wallet:not(.add-wallet) .wallet-name,
+.wallet:not(.add-wallet) .wallet-balance { color: var(--ink); }
+
+.wallet-detail-transfer { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; margin-top: 12px; }
+/* Stat keempat ("Transfers") cuma muncul kalau wallet-nya pernah transfer;
+   3 kolom jadi terlalu sempit, jadi dipecah 2x2. */
+.wallet-detail-stats.has-transfers { grid-template-columns: repeat(2, 1fr); }
+/* Transfer bukan income/expense — yang membedakan cukup warnanya, bukan
+   beratnya. Beratnya sengaja dibiarkan ikut base (800) supaya sebaris
+   dengan income/expense di daftar yang sama; warnanya abu-abu netral,
+   bukan merah/hijau, dan bukan hitam pekat (hitam pekat di berat 800
+   justru terbaca paling "keras" di antara angka berwarna). */
+.transaction-amount.transfer { color: var(--muted); }
+.transaction-icon .svg-icon { width: 18px; height: 18px; }
+
 /* ---------- Routing antar section ---------- */
 .page { display: none; }
 .page.active { display: block; animation: page-in .18s ease-out; }
@@ -83,6 +110,14 @@
 
 /* ---------- Rate conversion preview ---------- */
 .input input:disabled { background: var(--surface-2, #f0f0f2); color: var(--muted); cursor: not-allowed; }
+.input .filter-trigger:disabled {
+  border-color: #d7ded7;
+  background: var(--surface-2, #f0f0f2);
+  color: var(--muted);
+  cursor: not-allowed;
+  box-shadow: none;
+}
+.input .filter-trigger:disabled .filter-chevron { opacity: .55; }
 
 /* ---------- Inline hint ticker ---------- */
 .hint-ticker { display: block; margin-top: 6px; padding: 6px 10px; border-radius: 10px; background: #fff8e1; color: #92650a; font-size: 10px; font-weight: 600; line-height: 1.4; }

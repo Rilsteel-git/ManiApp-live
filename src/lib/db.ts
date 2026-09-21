@@ -5,6 +5,7 @@ import type {
   Profile,
   Transaction,
   TransactionPayload,
+  TransferPayload,
   Wallet,
   WalletPayload
 } from '../types';
@@ -35,7 +36,7 @@ function categoryFromRow(row: Record<string, unknown>): Category {
 }
 
 function transactionFromRow(row: Record<string, unknown>): Transaction {
-  return { currency: (row.currency || 'IDR') as Currency, exchangeRate: Number(row.exchange_rate ?? 1), id: String(row.id), walletId: row.wallet_id ? String(row.wallet_id) : null, categoryId: row.category_id ? String(row.category_id) : null, type: row.type as Transaction['type'], amount: Number(row.amount || 0), note: String(row.note || ''), date: String(row.date), createdAt: String(row.created_at) };
+  return { currency: (row.currency || 'IDR') as Currency, exchangeRate: Number(row.exchange_rate ?? 1), id: String(row.id), walletId: row.wallet_id ? String(row.wallet_id) : null, categoryId: row.category_id ? String(row.category_id) : null, type: row.type as Transaction['type'], amount: Number(row.amount || 0), note: String(row.note || ''), date: String(row.date), createdAt: String(row.created_at), isTransfer: Boolean(row.is_transfer), transferPairId: row.transfer_pair_id ? String(row.transfer_pair_id) : null };
 }
 
 export async function loadAppData(userId: string): Promise<AppData> {
@@ -120,6 +121,46 @@ export async function updateTransaction(id: string, payload: TransactionPayload)
 export async function deleteTransaction(id: string) {
   const { error } = await client().from('transactions').delete().eq('id', id);
   if (error) throw error;
+}
+
+/** Hapus dua-duanya sekaligus — menghapus satu leg saja akan menyisakan
+ *  transfer separuh jalan yang tampil seperti income/expense biasa. */
+export async function deleteTransfer(pairId: string) {
+  const { error } = await client().from('transactions').delete().eq('transfer_pair_id', pairId);
+  if (error) throw error;
+}
+
+/** Dua baris tertaut (keluar dari from-wallet, masuk ke to-wallet), sama-sama
+ *  `is_transfer` supaya nggak ikut kehitung di total income/expense. Bukan
+ *  satu transaksi database (client Supabase JS nggak punya multi-statement
+ *  transaction) — kalau leg kedua gagal, leg pertama dihapus lagi supaya
+ *  nggak nyisa transfer yang cuma separuh jalan. */
+export async function createTransfer(userId: string, payload: TransferPayload) {
+  const pairId = crypto.randomUUID();
+  const note = payload.note.trim();
+
+  const { data: fromRow, error: fromError } = await client()
+    .from('transactions')
+    .insert({
+      user_id: userId, wallet_id: payload.fromWalletId, category_id: null, type: 'expense',
+      amount: payload.fromAmount, currency: payload.fromCurrency, exchange_rate: payload.fromRate,
+      note, date: payload.date, is_transfer: true, transfer_pair_id: pairId
+    })
+    .select('id')
+    .single();
+  if (fromError) throw fromError;
+
+  const { error: toError } = await client()
+    .from('transactions')
+    .insert({
+      user_id: userId, wallet_id: payload.toWalletId, category_id: null, type: 'income',
+      amount: payload.toAmount, currency: payload.toCurrency, exchange_rate: payload.toRate,
+      note, date: payload.date, is_transfer: true, transfer_pair_id: pairId
+    });
+  if (toError) {
+    await client().from('transactions').delete().eq('id', fromRow.id);
+    throw toError;
+  }
 }
 
 export async function updateProfile(id: string, name: string, photoUrl?: string) {
