@@ -25,7 +25,8 @@ function PasswordField({
   autoComplete,
   placeholder,
   minLength,
-  error
+  error,
+  hint
 }: {
   id: string;
   label: string;
@@ -35,6 +36,7 @@ function PasswordField({
   placeholder: string;
   minLength?: number;
   error?: string;
+  hint?: string;
 }) {
   const [visible, setVisible] = useState(false);
   return (
@@ -61,8 +63,21 @@ function PasswordField({
         </button>
       </div>
       {error && <small className="field-error">{error}</small>}
+      {!error && hint && <small className="hint-info">{hint}</small>}
     </div>
   );
+}
+
+/** 8+ karakter, campuran huruf besar/kecil, angka, dan simbol. */
+const PASSWORD_HINT = 'At least 8 characters, with uppercase, lowercase, a number, and a special character.';
+
+function validatePassword(value: string): string | null {
+  if (value.length < 8) return 'Use at least 8 characters.';
+  if (!/[a-z]/.test(value)) return 'Add at least one lowercase letter.';
+  if (!/[A-Z]/.test(value)) return 'Add at least one uppercase letter.';
+  if (!/[0-9]/.test(value)) return 'Add at least one number.';
+  if (!/[^A-Za-z0-9]/.test(value)) return 'Add at least one special character (e.g. ! @ # $ %).';
+  return null;
 }
 
 export function AuthPage() {
@@ -135,7 +150,8 @@ export function AuthPage() {
     const next: Record<string, string> = {};
     if (!name.trim()) next.name = 'Tell us what to call you.';
     if (!email.trim()) next.email = 'Enter your email address.';
-    if (password.length < 8) next.password = 'Use at least 8 characters.';
+    const passwordError = validatePassword(password);
+    if (passwordError) next.password = passwordError;
     if (confirm !== password) next.confirm = 'Both passwords must match.';
     setErrors(next);
     if (Object.keys(next).length) return;
@@ -256,6 +272,7 @@ export function AuthPage() {
                 placeholder="At least 8 characters"
                 minLength={8}
                 error={errors.password}
+                hint={PASSWORD_HINT}
               />
               <PasswordField
                 id="register-confirm"
