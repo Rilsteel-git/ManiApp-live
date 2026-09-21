@@ -90,8 +90,8 @@
    halaman pendek (mis. Wallets) tidak memakai scrollbar sedangkan halaman
    panjang (Dashboard/Statistics) memakainya, membuat .shell yang di-center
    dengan margin:auto bergeser beberapa piksel setiap ganti halaman. */
-html { scrollbar-gutter: stable }
-body { background: #eef1ee }
+html { scrollbar-gutter: stable; overscroll-behavior-y: none }
+body { background: #eef1ee; overscroll-behavior-y: none }
 .shell {
   display: block;
   width: 100%;
@@ -108,12 +108,14 @@ body { background: #eef1ee }
 .mobile-nav {
   right: auto;
   left: 50%;
+  bottom: calc(12px + env(safe-area-inset-bottom));
   width: min(calc(var(--app-width) - 24px), calc(100vw - 24px));
   transform: translateX(-50%);
 }
 .toast-stack {
   right: auto;
   left: 50%;
+  bottom: calc(82px + env(safe-area-inset-bottom));
   width: min(calc(var(--app-width) - 24px), calc(100vw - 24px));
   transform: translateX(-50%);
 }
@@ -462,7 +464,10 @@ body { background: #eef1ee }
   border: 0;
   border-radius: 16px;
   background: transparent;
+  color: inherit;
   text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
   transition: background .16s, transform .16s;
 }
 .wallet-row:hover { background: #f5f9f5 }
@@ -716,7 +721,10 @@ body { background: #eef1ee }
   border: 0;
   border-radius: 16px;
   background: transparent;
+  color: inherit;
   text-align: left;
+  -webkit-appearance: none;
+  appearance: none;
   transition: background .16s, transform .16s;
 }
 .menu-row:hover { background: #f5f9f5 }
