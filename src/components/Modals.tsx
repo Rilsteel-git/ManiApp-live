@@ -40,7 +40,7 @@ import { Avatar } from './Avatar';
 import { useFormErrors } from '../hooks/useFormErrors';
 import { useIncrementalList } from '../hooks/useIncrementalList';
 import { TransactionRow } from './rows';
-import { currencyOptions, fractionDigits, readDecimal, validAmount, validRate } from '../lib/currency';
+import { currencyOptions, fractionDigits, readDecimal, roundToCurrency, validAmount, validRate } from '../lib/currency';
 import { fetchLiveRate } from '../lib/exchangeRate';
 
 type Errors = Record<string, string>;
@@ -657,7 +657,7 @@ function TransferModal({ fromWalletId }: { fromWalletId?: string }) {
   const fromAmount = readDecimal(amount);
   const amountValid = validAmount(fromAmount, fromCurrency) && fromAmount > 0;
   const toAmount = fromWallet && toWallet
-    ? (fromCurrency === toCurrency ? fromAmount : fromAmount * fromWallet.exchangeRate / toWallet.exchangeRate)
+    ? (fromCurrency === toCurrency ? fromAmount : roundToCurrency(fromAmount * fromWallet.exchangeRate / toWallet.exchangeRate, toCurrency))
     : 0;
 
   const fromOptions = [{ value: '', label: 'Choose a wallet' }].concat(
@@ -674,6 +674,7 @@ function TransferModal({ fromWalletId }: { fromWalletId?: string }) {
     if (!toId) next.toId = 'Choose a wallet to send to.';
     if (fromId && toId && fromId === toId) next.toId = 'Choose a different wallet.';
     if (!amountValid) next.amount = `Enter an amount greater than 0 (max ${fractionDigits(fromCurrency)} decimal places).`;
+    else if (fromWallet && toWallet && toAmount <= 0) next.amount = `Amount is too small to convert to ${toCurrency}.`;
     if (!date) next.date = 'Pick a date.';
     setErrors(next);
     if (Object.keys(next).length) return;

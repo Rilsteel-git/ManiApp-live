@@ -8,6 +8,13 @@ export function validAmount(value: number, currency: Currency) {
   return Number.isFinite(value) && Math.abs(value) < 1e12 && Math.abs(units - Math.round(units)) < 0.00001;
 }
 export function validRate(value: number) { return Number.isFinite(value) && value > 0 && value < 1e9; }
+/** Cross-rate conversions (e.g. transfers) land on odd fractions; round to
+ *  the target currency's precision so whole-amount currencies (IDR/KRW/JPY)
+ *  don't get rejected by the database check. */
+export function roundToCurrency(value: number, currency: Currency) {
+  const factor = 10 ** fractionDigits(currency);
+  return Math.round(value * factor) / factor;
+}
 export function readDecimal(value: string) {
   const normalized = value.trim().replace(',', '.');
   return /^-?\d+(\.\d+)?$/.test(normalized) ? Number(normalized) : NaN;
