@@ -49,6 +49,7 @@ Open the URL Vite prints, usually `http://localhost:5173`.
 - Profile name and avatar photo
 - Reset financial data without deleting the profile
 - Mobile-only shell, max width 430px per the PRD
+- Installable PWA with a standalone app window and update prompt
 
 ## Scripts
 
@@ -57,7 +58,14 @@ npm run dev
 npm run typecheck
 npm run build
 npm run preview
+npm run generate:pwa-icons
 ```
+
+## PWA
+
+The production build generates `manifest.webmanifest` and a service worker. After deployment over HTTPS, install Mani App from the browser's app menu on Android or Add to Home Screen in Safari on iPhone. For a local PWA check, run `npm run build` and then `npm run preview`; the service worker is not enabled by `npm run dev`.
+
+The service worker caches the app shell and static assets. Wallet and transaction data still need a connection to Supabase. If the logo changes, run `npm run generate:pwa-icons` to regenerate the install icons from `public/mani-app-logo.png`.
 
 ## Git workflow
 
