@@ -135,6 +135,7 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
   useEffect(() => {
     const box = containerRef.current;
     if (!box) return;
+    const dragContainer: HTMLDivElement = box;
 
     function onPointerDown(event: PointerEvent) {
       if (drag.current || !event.isPrimary || event.pointerType === 'touch' || event.button !== 0) return;
@@ -148,7 +149,7 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
       current.y = event.clientY;
       if (!current.active && Math.abs(current.y - current.startY) >= POINTER_THRESHOLD) {
         activate();
-        if (!box.hasPointerCapture(event.pointerId)) box.setPointerCapture(event.pointerId);
+        if (!dragContainer.hasPointerCapture(event.pointerId)) dragContainer.setPointerCapture(event.pointerId);
       }
       if (current.active) event.preventDefault();
       updatePosition();
