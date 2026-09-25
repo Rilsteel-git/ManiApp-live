@@ -114,7 +114,7 @@ export function series(transactions: Transaction[], period: Period): SeriesRow[]
   const buckets: { label: string; from: string; to: string }[] = [];
 
   if (period.mode === 'weekly') {
-    const dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+    const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
     for (let i = 0; i < 7; i++) {
       const day = addDays(period.start, i);
       buckets.push({ label: dayNames[i], from: toIso(day), to: toIso(day) });
@@ -125,7 +125,7 @@ export function series(transactions: Transaction[], period: Period): SeriesRow[]
     while (cursor <= period.end) {
       let endOfBucket = addDays(cursor, 6);
       if (endOfBucket > period.end) endOfBucket = period.end;
-      buckets.push({ label: 'Mg ' + week, from: toIso(cursor), to: toIso(endOfBucket) });
+      buckets.push({ label: 'Week ' + week, from: toIso(cursor), to: toIso(endOfBucket) });
       cursor = addDays(endOfBucket, 1);
       week += 1;
     }

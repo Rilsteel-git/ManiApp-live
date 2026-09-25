@@ -21,7 +21,7 @@ export function DashboardPage() {
   const { openModal, balanceHidden, toggleBalance, formatBalance: nativeFormatBalance } = useUi();
   const removeTransfer = useDeleteTransfer();
 
-  const { transactions, total, formatBalance, formatCurrency, formatCompact, currency } = useReport();
+  const { transactions, total, formatBalance, formatCurrency, currency } = useReport();
   const walletCards = withBalances(wallets, nativeTransactions);
 
   const month = range('monthly', 0);
@@ -106,11 +106,11 @@ export function DashboardPage() {
           <div className="mini-grid">
             <div className="mini">
               <small>Income</small>
-              <strong className="income num" id="month-income">{formatCompact(monthTotals.income)}</strong>
+              <strong className="income num" id="month-income">{formatCurrency(monthTotals.income)}</strong>
             </div>
             <div className="mini">
               <small>Expenses</small>
-              <strong className="expense num" id="month-expense">{formatCompact(monthTotals.expense)}</strong>
+              <strong className="expense num" id="month-expense">{formatCurrency(monthTotals.expense)}</strong>
             </div>
           </div>
           <div>

@@ -28,6 +28,7 @@ export function TransactionsPage() {
   const removeTransfer = useDeleteTransfer();
   // Tanggal yang sedang dilipat — sama seperti collapsedDates di render.js.
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const [allCollapsed, setAllCollapsed] = useState(false);
 
   // Tanpa filter wallet, dua leg transfer digabung jadi satu baris. Begitu
   // difilter per wallet, leg wallet itu ditampilkan apa adanya.
@@ -159,11 +160,31 @@ export function TransactionsPage() {
         </div>
 
         <div className="divider" />
+        {groups.length > 0 && (
+          <div className="tx-group-controls" role="group" aria-label="Transaction date groups">
+            <button
+              className="btn ghost"
+              type="button"
+              aria-controls="tx-list"
+              onClick={() => { setAllCollapsed(false); setCollapsed({}); }}
+            >
+              Expand all
+            </button>
+            <button
+              className="btn ghost"
+              type="button"
+              aria-controls="tx-list"
+              onClick={() => { setAllCollapsed(true); setCollapsed({}); }}
+            >
+              Collapse all
+            </button>
+          </div>
+        )}
         <div id="tx-list">
           {visibleItems.length ? (
             groups.map((group) => {
               const dayTotals = totals(reportTransactions(group.items, currency, rate));
-              const isCollapsed = Boolean(collapsed[group.date]);
+              const isCollapsed = collapsed[group.date] ?? allCollapsed;
               return (
                 <div
                   className={`tx-date-group${isCollapsed ? ' collapsed' : ''}`}

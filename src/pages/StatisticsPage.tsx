@@ -23,7 +23,7 @@ Chart.defaults.color = '#707872';
 export function StatisticsPage() {
   const { wallets, categories } = useAppData();
   const { openModal } = useUi();
-  const { transactions, formatCurrency, formatCompact, currency } = useReport();
+  const { transactions, formatCurrency, currency } = useReport();
   const [mode, setMode] = useState<StatsMode>('weekly');
   const [offset, setOffset] = useState(0);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
@@ -83,7 +83,7 @@ export function StatisticsPage() {
         beginAtZero: true,
         border: { display: false },
         grid: { color: '#eef1ee' },
-        ticks: { callback: (value) => formatCompact(Number(value)) }
+        ticks: { callback: (value) => formatCurrency(Number(value)) }
       }
     }
   };
@@ -140,7 +140,7 @@ export function StatisticsPage() {
           <article className="card">
             <div className="card-head">
               <div><h3>Where it went</h3><p id="breakdown-label">By category · {period.label}</p></div>
-              <span className="badge gray num" id="breakdown-total">{formatCompact(report.totals.expense)} total</span>
+              <span className="badge gray num" id="breakdown-total">{formatCurrency(report.totals.expense)} total</span>
             </div>
             <div className="chart-box">
               {report.breakdown.length ? (
@@ -231,7 +231,7 @@ export function StatisticsPage() {
               <div>
                 <h3>Income vs expenses</h3>
                 <p id="bar-label">
-                  {period.mode === 'weekly' ? 'Per hari · ' : 'Per minggu · '}{period.label}
+                  {period.mode === 'weekly' ? 'Per day · ' : 'Per week · '}{period.label}
                 </p>
               </div>
             </div>
@@ -281,7 +281,7 @@ export function StatisticsPage() {
                         <i className="dot" style={{ background: '#008f1d' }} aria-hidden="true" />
                         <span>{row.label}</span>
                         <strong className="num">
-                          {formatCompact(row.income)} / {formatCompact(row.expense)}
+                          {formatCurrency(row.income)} / {formatCurrency(row.expense)}
                         </strong>
                       </div>
                     ))}
