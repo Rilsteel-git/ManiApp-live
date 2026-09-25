@@ -141,13 +141,15 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
       const row = draggableRow(event.target);
       if (!row) return;
       startDrag(row.id, event.clientY, event.pointerId, 'pointer');
-      row.el.setPointerCapture(event.pointerId);
     }
     function onPointerMove(event: PointerEvent) {
       const current = drag.current;
       if (!current || current.mode !== 'pointer' || event.pointerId !== current.pointerId) return;
       current.y = event.clientY;
-      if (!current.active && Math.abs(current.y - current.startY) >= POINTER_THRESHOLD) activate();
+      if (!current.active && Math.abs(current.y - current.startY) >= POINTER_THRESHOLD) {
+        activate();
+        if (!box.hasPointerCapture(event.pointerId)) box.setPointerCapture(event.pointerId);
+      }
       if (current.active) event.preventDefault();
       updatePosition();
     }
@@ -227,7 +229,7 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
       const pending = suppressedClick.current;
       if (!pending || !(event.target instanceof Element)) return;
       const row = event.target.closest<HTMLElement>('[data-drag-id]');
-      if (row?.dataset.dragId !== pending.id) return;
+      if (row?.dataset.dragId !== pending.id && event.target !== box) return;
       event.preventDefault();
       event.stopPropagation();
       window.clearTimeout(pending.timeout);
@@ -235,9 +237,9 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
     }
 
     box.addEventListener('pointerdown', onPointerDown);
-    box.addEventListener('pointermove', onPointerMove);
-    box.addEventListener('pointerup', onPointerUp);
-    box.addEventListener('pointercancel', onPointerCancel);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+    window.addEventListener('pointercancel', onPointerCancel);
     box.addEventListener('lostpointercapture', onLostPointerCapture);
     box.addEventListener('touchstart', onTouchStart, { passive: true });
     box.addEventListener('touchmove', onTouchMove, { passive: false });
@@ -247,9 +249,9 @@ export function useReorderableList(ids: string[], onReorder: (ids: string[]) => 
     box.addEventListener('click', onClick);
     return () => {
       box.removeEventListener('pointerdown', onPointerDown);
-      box.removeEventListener('pointermove', onPointerMove);
-      box.removeEventListener('pointerup', onPointerUp);
-      box.removeEventListener('pointercancel', onPointerCancel);
+      window.removeEventListener('pointermove', onPointerMove);
+      window.removeEventListener('pointerup', onPointerUp);
+      window.removeEventListener('pointercancel', onPointerCancel);
       box.removeEventListener('lostpointercapture', onLostPointerCapture);
       box.removeEventListener('touchstart', onTouchStart);
       box.removeEventListener('touchmove', onTouchMove);
