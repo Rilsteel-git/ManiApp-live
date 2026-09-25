@@ -21,6 +21,7 @@ export interface Wallet {
   exchangeRate: number;
   id: string;
   name: string;
+  position: number;
   type: WalletType;
   /** Saldo awal. Saldo berjalan selalu dihitung ulang dari transaksi. */
   initialBalance: number;

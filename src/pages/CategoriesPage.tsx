@@ -12,7 +12,7 @@ import { txCount } from '../lib/format';
 import { Icon } from '../components/IconSprite';
 import { EmptyState, Loading, Segmented } from '../components/Ui';
 import { useDeleteCategory } from '../components/Modals';
-import { useCategoryDrag } from '../hooks/useCategoryDrag';
+import { useReorderableList } from '../hooks/useReorderableList';
 import { useIncrementalList } from '../hooks/useIncrementalList';
 
 export function CategoriesPage() {
@@ -30,7 +30,7 @@ export function CategoriesPage() {
       .catch((reason) => toast(reason instanceof Error ? reason.message : 'Could not reorder categories.', { variant: 'error' }));
   }, [reorderCategories, toast]);
   const activeIds = list.map((category) => category.id);
-  const { order, containerRef, draggingId } = useCategoryDrag(activeIds, handleReorder);
+  const { order, containerRef, draggingId } = useReorderableList(activeIds, handleReorder);
   const sameSet = order.length === list.length && order.every((id) => list.some((category) => category.id === id));
   const orderedList = sameSet ? order.map((id) => list.find((category) => category.id === id)!) : list;
   // Lima kategori per batch. Item lama tetap terlihat; hanya batch yang baru

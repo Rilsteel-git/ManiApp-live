@@ -28,7 +28,7 @@ function profileFromRow(row: Record<string, unknown>): Profile {
 }
 
 function walletFromRow(row: Record<string, unknown>): Wallet {
-  return { currency: (row.currency || 'IDR') as Currency, exchangeRate: Number(row.exchange_rate ?? 1), id: String(row.id), name: String(row.name), type: row.type as Wallet['type'], initialBalance: Number(row.initial_balance || 0), createdAt: String(row.created_at) };
+  return { currency: (row.currency || 'IDR') as Currency, exchangeRate: Number(row.exchange_rate ?? 1), id: String(row.id), name: String(row.name), position: Number(row.position || 0), type: row.type as Wallet['type'], initialBalance: Number(row.initial_balance || 0), createdAt: String(row.created_at) };
 }
 
 function categoryFromRow(row: Record<string, unknown>): Category {
@@ -43,7 +43,7 @@ export async function loadAppData(userId: string): Promise<AppData> {
   const db = client();
   const [profileResult, walletsResult, categoriesResult, transactionsResult] = await Promise.all([
     db.from('profiles').select('*').eq('id', userId).maybeSingle(),
-    db.from('wallets').select('*').eq('user_id', userId).order('created_at', { ascending: true }),
+    db.from('wallets').select('*').eq('user_id', userId).order('position', { ascending: true }).order('created_at', { ascending: true }),
     db.from('categories').select('*').eq('user_id', userId).order('position', { ascending: true }),
     db.from('transactions').select('*').eq('user_id', userId).order('date', { ascending: false }).order('created_at', { ascending: false })
   ]);
@@ -60,7 +60,16 @@ export async function loadAppData(userId: string): Promise<AppData> {
 }
 
 export async function createWallet(userId: string, payload: WalletPayload) {
-  const { error } = await client().from('wallets').insert({ user_id: userId, name: payload.name.trim(), type: payload.type, initial_balance: payload.initialBalance, currency: payload.currency, exchange_rate: payload.exchangeRate });
+  const db = client();
+  const { data: lastWallet, error: positionError } = await db.from('wallets')
+    .select('position')
+    .eq('user_id', userId)
+    .order('position', { ascending: false })
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (positionError) throw positionError;
+  const { error } = await db.from('wallets').insert({ user_id: userId, name: payload.name.trim(), type: payload.type, initial_balance: payload.initialBalance, currency: payload.currency, exchange_rate: payload.exchangeRate, position: Number(lastWallet?.position ?? -1) + 1 });
   if (error) throw error;
 }
 
@@ -103,6 +112,15 @@ export async function deleteCategory(id: string) {
 export async function reorderCategories(ids: string[]) {
   const results = await Promise.all(
     ids.map((id, index) => client().from('categories').update({ position: index }).eq('id', id))
+  );
+  const failed = results.find((result) => result.error);
+  if (failed?.error) throw failed.error;
+}
+
+/** `ids` sudah berurutan sesuai posisi baru; index-nya jadi `position`. */
+export async function reorderWallets(ids: string[]) {
+  const results = await Promise.all(
+    ids.map((id, index) => client().from('wallets').update({ position: index }).eq('id', id))
   );
   const failed = results.find((result) => result.error);
   if (failed?.error) throw failed.error;

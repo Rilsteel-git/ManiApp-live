@@ -15,6 +15,7 @@ interface AppDataValue {
   addWallet: (payload: WalletPayload) => Promise<void>;
   editWallet: (id: string, payload: WalletPayload) => Promise<void>;
   removeWallet: (id: string) => Promise<void>;
+  reorderWallets: (ids: string[]) => Promise<void>;
   addCategory: (payload: CategoryPayload) => Promise<void>;
   editCategory: (id: string, payload: CategoryPayload) => Promise<void>;
   archiveCategory: (id: string) => Promise<void>;
@@ -80,6 +81,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     addWallet: (payload) => run(() => db.createWallet(userId!, payload)),
     editWallet: (id, payload) => run(() => db.updateWallet(id, payload)),
     removeWallet: (id) => run(() => db.deleteWallet(id)),
+    reorderWallets: (ids) => run(() => db.reorderWallets(ids)),
     addCategory: (payload) => run(() => db.createCategory(userId!, payload)),
     editCategory: (id, payload) => run(() => db.updateCategory(id, payload)),
     archiveCategory: (id) => run(() => db.archiveCategory(id)),

@@ -23,12 +23,16 @@ create table if not exists public.wallets (
   user_id         uuid        not null references auth.users (id) on delete cascade,
   name            text        not null check (length(btrim(name)) > 0),
   type            text        not null default 'cash' check (type in ('bank', 'e-wallet', 'cash')),
+  -- Urutan tampil wallet (drag & drop di halaman Wallets).
+  position        integer     not null default 0,
   -- Saldo berjalan TIDAK disimpan. Yang disimpan hanya saldo awal;
   -- saldo = initial_balance + income − expense (dihitung ulang di client).
   initial_balance numeric(16, 2) not null default 0,
   created_at      timestamptz not null default now()
 );
+alter table public.wallets add column if not exists position integer not null default 0;
 create index if not exists wallets_user_id_idx on public.wallets (user_id);
+create index if not exists wallets_user_position_idx on public.wallets (user_id, position);
 
 create table if not exists public.categories (
   id          uuid primary key default gen_random_uuid(),

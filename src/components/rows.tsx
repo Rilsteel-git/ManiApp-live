@@ -94,19 +94,29 @@ export function AddWalletCard({ onClick }: { onClick: () => void }) {
 export function WalletRow({
   wallet,
   formatBalance,
-  onOpen
+  onOpen,
+  dragging = false
 }: {
   wallet: WalletWithBalance;
   formatBalance: (value: number, currency?: Currency) => string;
   onOpen: (id: string) => void;
+  dragging?: boolean;
 }) {
   const negative = wallet.balance < 0;
   return (
-    <button
-      className={`wallet-row${negative ? ' negative' : ''}`}
-      type="button"
-      aria-label={`Open ${wallet.name}`}
+    <div
+      className={`wallet-row wallet-row-item${negative ? ' negative' : ''}${dragging ? ' dragging' : ''}`}
+      data-drag-id={wallet.id}
+      tabIndex={0}
+      role="button"
+      aria-label={`Open ${wallet.name}. Drag to reorder.`}
       onClick={() => onOpen(wallet.id)}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onOpen(wallet.id);
+        }
+      }}
     >
       <span className="wallet-icon"><Icon name={wallet.icon as IconName} /></span>
       <span className="wallet-row-body">
@@ -115,7 +125,7 @@ export function WalletRow({
       </span>
       <span className="wallet-row-balance num">{formatBalance(wallet.balance, wallet.currency)}</span>
       <span className="wallet-row-chevron" aria-hidden="true"><Icon name="chevron-right" /></span>
-    </button>
+    </div>
   );
 }
 
