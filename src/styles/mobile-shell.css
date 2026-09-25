@@ -586,6 +586,7 @@ body { background: #eef1ee; overscroll-behavior-y: none }
   text-transform: uppercase;
 }
 .category-row.archived .category-icon { background: #f1f3f1; filter: grayscale(.45); opacity: .85 }
+.category-picker-toggle { justify-self: center; min-height: 36px; margin-top: 8px; padding: 0 12px; font-size: 11px }
 .category-row.archived strong { color: #6b7570 }
 .category-restore { min-height: 32px; padding: 0 12px; font-size: 12px }
 

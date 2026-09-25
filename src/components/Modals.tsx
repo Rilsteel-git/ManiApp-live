@@ -44,6 +44,7 @@ import { currencyOptions, fractionDigits, readDecimal, roundToCurrency, validAmo
 import { fetchLiveRate } from '../lib/exchangeRate';
 
 type Errors = Record<string, string>;
+const CATEGORY_ICON_PREVIEW_COUNT = 9;
 
 /** Field form design system: .input (+ .error) > label > control > .field-error */
 function Field({
@@ -360,8 +361,20 @@ function CategoryModal({ category }: { category: Category | null }) {
   const [name, setName] = useState(category ? category.name : '');
   const [type, setType] = useState<TransactionType>(category ? category.type : 'expense');
   const [icon, setIcon] = useState(category ? category.icon : '🍜');
+  const [showAllIcons, setShowAllIcons] = useState(false);
   const { errors, setErrors, clearError } = useFormErrors();
   const [busy, setBusy] = useState(false);
+  const currentIconOption = CATEGORY_ICONS.find((item) => item.icon === icon) ||
+    (category ? { icon: category.icon, label: 'Current' } : null);
+  const availableIcons = currentIconOption && !CATEGORY_ICONS.some((item) => item.icon === currentIconOption.icon)
+    ? [currentIconOption, ...CATEGORY_ICONS]
+    : CATEGORY_ICONS;
+  const previewIcons = availableIcons.slice(0, CATEGORY_ICON_PREVIEW_COUNT);
+  const visibleIcons = showAllIcons
+    ? availableIcons
+    : currentIconOption && !previewIcons.some((item) => item.icon === currentIconOption.icon)
+      ? [...previewIcons, currentIconOption]
+      : previewIcons;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -433,7 +446,7 @@ function CategoryModal({ category }: { category: Category | null }) {
           <div className="input full">
             <label id="category-icon-label">Icon</label>
             <div className="category-picker" id="category-picker" role="listbox" aria-labelledby="category-icon-label">
-              {CATEGORY_ICONS.map((item) => (
+              {visibleIcons.map((item) => (
                 <button
                   key={item.icon}
                   className={`category-choice${item.icon === icon ? ' selected' : ''}`}
@@ -448,6 +461,17 @@ function CategoryModal({ category }: { category: Category | null }) {
                 </button>
               ))}
             </div>
+            {availableIcons.length > CATEGORY_ICON_PREVIEW_COUNT && (
+              <button
+                className="btn ghost category-picker-toggle"
+                type="button"
+                aria-expanded={showAllIcons}
+                aria-controls="category-picker"
+                onClick={() => setShowAllIcons((value) => !value)}
+              >
+                {showAllIcons ? 'Show fewer' : `See all categories (${availableIcons.length})`}
+              </button>
+            )}
           </div>
         </div>
       </form>

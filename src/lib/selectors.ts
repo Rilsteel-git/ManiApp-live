@@ -31,7 +31,29 @@ export const CATEGORY_ICONS = [
   { icon: '📱', label: 'Pulsa' }, { icon: '✈️', label: 'Travel' },
   { icon: '🐾', label: 'Hewan' }, { icon: '📈', label: 'Investasi' },
   { icon: '🤝', label: 'Donasi' }, { icon: '⚽', label: 'Olahraga' },
-  { icon: '✨', label: 'Lainnya' }
+  { icon: '✨', label: 'Lainnya' },
+  { icon: '🥬', label: 'Sayur & buah' }, { icon: '🥩', label: 'Daging & ikan' },
+  { icon: '☕', label: 'Kopi & jajan' }, { icon: '🍽️', label: 'Restoran' },
+  { icon: '🥡', label: 'Pesan antar' }, { icon: '🚗', label: 'Kendaraan' },
+  { icon: '⛽', label: 'Bensin' }, { icon: '🅿️', label: 'Parkir' },
+  { icon: '🚆', label: 'Transportasi umum' }, { icon: '🏥', label: 'Biaya medis' },
+  { icon: '🧴', label: 'Perawatan diri' }, { icon: '👕', label: 'Pakaian' },
+  { icon: '🧹', label: 'Kebersihan' }, { icon: '🛋️', label: 'Perabot rumah' },
+  { icon: '🔧', label: 'Perbaikan' }, { icon: '🏘️', label: 'Sewa tempat' },
+  { icon: '💡', label: 'Listrik' }, { icon: '🚰', label: 'Air' },
+  { icon: '🌐', label: 'Internet' }, { icon: '🛡️', label: 'Asuransi' },
+  { icon: '💳', label: 'Cicilan' }, { icon: '👶', label: 'Anak' },
+  { icon: '👪', label: 'Keluarga' }, { icon: '📦', label: 'Langganan' },
+  { icon: '🎮', label: 'Game' }, { icon: '🎵', label: 'Musik' },
+  { icon: '📖', label: 'Buku' }, { icon: '🎓', label: 'Kursus' },
+  { icon: '💝', label: 'Hadiah' }, { icon: '🏖️', label: 'Liburan' },
+  { icon: '🧑‍💻', label: 'Freelance' }, { icon: '🏪', label: 'Usaha' },
+  { icon: '🪙', label: 'Bunga' }, { icon: '💹', label: 'Dividen' },
+  { icon: '💸', label: 'Cashback' }, { icon: '♻️', label: 'Pengembalian dana' },
+  { icon: '🧧', label: 'THR' }, { icon: '🎨', label: 'Komisi' },
+  { icon: '🛍️', label: 'Penjualan' }, { icon: '🎟️', label: 'Acara' },
+  { icon: '🧘', label: 'Kebugaran' }, { icon: '🧺', label: 'Laundry' },
+  { icon: '🏦', label: 'Biaya bank' }, { icon: '🧮', label: 'Pajak' }
 ];
 
 /** Dipakai saat kategori sebuah transaksi sudah dihapus permanen. */
