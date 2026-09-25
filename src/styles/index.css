@@ -19,6 +19,23 @@
 @import 'tailwindcss/theme.css' layer(theme);
 @import 'tailwindcss/utilities.css' layer(utilities);
 
+/* Keep top-level app content below Android/iOS status bars and display cutouts.
+   Capacitor injects the custom variable on older Android WebViews; env() covers
+   modern WebViews, Safari, and installed PWAs. max() avoids double padding. */
+#root .shell {
+  padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+}
+
+#root .auth-screen {
+  padding-top: calc(24px + max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px)));
+}
+
+@media (max-width: 600px) {
+  #root .auth-screen {
+    padding-top: max(env(safe-area-inset-top, 0px), var(--safe-area-inset-top, 0px));
+  }
+}
+
 .pwa-update-prompt {
   position: fixed;
   z-index: 10001;

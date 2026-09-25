@@ -1,6 +1,10 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
+import { App } from '@capacitor/app';
+import { Capacitor } from '@capacitor/core';
 import { supabase, isSupabaseConfigured } from '../lib/supabase';
+
+const NATIVE_AUTH_CALLBACK = 'com.rilsteel.maniapp://login-callback';
 
 export type SignUpResult =
   | 'signed-in'
@@ -32,7 +36,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError('Supabase belum dikonfigurasi. Isi file .env.local terlebih dahulu.');
       return;
     }
-    void supabase.auth.getSession().then(({ data, error: result }) => {
+    const client = supabase;
+    void client.auth.getSession().then(({ data, error: result }) => {
       if (result) setError(result.message);
       setSession(data.session);
       setLoading(false);
@@ -40,8 +45,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setError(reason instanceof Error ? reason.message : 'Could not restore your session.');
       setLoading(false);
     });
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
-    return () => listener.subscription.unsubscribe();
+    const { data: listener } = client.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+
+    let disposed = false;
+    const handleNativeAuthUrl = async (url: string) => {
+      try {
+        const callback = new URL(url);
+        const code = callback.searchParams.get('code');
+        const hashParams = new URLSearchParams(callback.hash.slice(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+
+        if (code) {
+          const { error: exchangeError } = await client.auth.exchangeCodeForSession(code);
+          if (exchangeError) throw exchangeError;
+        } else if (accessToken && refreshToken) {
+          const { error: sessionError } = await client.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+          if (sessionError) throw sessionError;
+        } else {
+          const callbackError = hashParams.get('error_description') || callback.searchParams.get('error_description');
+          if (callbackError) throw new Error(callbackError);
+        }
+
+        if (!disposed) window.history.replaceState(null, '', '#/login');
+      } catch (reason) {
+        if (!disposed) setError(reason instanceof Error ? reason.message : 'Could not complete email confirmation.');
+      }
+    };
+
+    let removeUrlListener: (() => void) | undefined;
+    if (Capacitor.isNativePlatform()) {
+      const urlListener = App.addListener('appUrlOpen', ({ url }) => {
+        void handleNativeAuthUrl(url);
+      });
+      void urlListener.then((handle) => {
+        if (disposed) void handle.remove();
+        else removeUrlListener = () => { void handle.remove(); };
+      });
+      void App.getLaunchUrl().then((launch) => {
+        if (launch?.url) void handleNativeAuthUrl(launch.url);
+      });
+    }
+
+    return () => {
+      disposed = true;
+      removeUrlListener?.();
+      listener.subscription.unsubscribe();
+    };
   }, []);
 
   async function signIn(email: string, password: string) {
@@ -65,7 +115,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       password,
       options: {
         data: { name },
-        emailRedirectTo: `${window.location.origin}/#/login`
+        emailRedirectTo: Capacitor.isNativePlatform()
+          ? NATIVE_AUTH_CALLBACK
+          : `${window.location.origin}/#/login`
       }
     });
     if (result) throw result;

@@ -59,6 +59,8 @@ npm run typecheck
 npm run build
 npm run preview
 npm run generate:pwa-icons
+npm run generate:native-assets
+npm run cap:sync
 ```
 
 ## PWA
@@ -66,6 +68,18 @@ npm run generate:pwa-icons
 The production build generates `manifest.webmanifest` and a service worker. After deployment over HTTPS, install Mani App from the browser's app menu on Android or Add to Home Screen in Safari on iPhone. For a local PWA check, run `npm run build` and then `npm run preview`; the service worker is not enabled by `npm run dev`.
 
 The service worker caches the app shell and static assets. Wallet and transaction data still need a connection to Supabase. If the logo changes, run `npm run generate:pwa-icons` to regenerate the install icons from `public/mani-app-logo.png`.
+
+## Android and iOS apps
+
+The mobile apps use Capacitor to package the same React app for Android and iOS. Build and sync the web app into both native projects with:
+
+```bash
+npm run cap:sync
+```
+
+Open the Android project with `npm run cap:open:android` and the iOS project with `npm run cap:open:ios`. Android builds require Android Studio and the Android SDK. iOS builds and signing require macOS with Xcode. Android and iOS app updates are distributed through their installed package or store release; Vercel deployments continue updating the PWA/web version.
+
+Email confirmation links in the native apps use `com.rilsteel.maniapp://login-callback`. Add this exact URL to the Supabase Auth redirect URL allow list before testing native registration. The current application ID is `com.rilsteel.maniapp`; confirm it is available and final before publishing to either app store.
 
 ## Git workflow
 
