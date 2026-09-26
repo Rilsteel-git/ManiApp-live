@@ -81,6 +81,17 @@ Open the Android project with `npm run cap:open:android` and the iOS project wit
 
 Email confirmation links in the native apps use `com.rilsteel.maniapp://login-callback`. Add this exact URL to the Supabase Auth redirect URL allow list before testing native registration. The current application ID is `com.rilsteel.maniapp`; confirm it is available and final before publishing to either app store.
 
+Password reset emails use Supabase Auth. For a small free beta without a sending domain, a dedicated Gmail account can be connected as custom SMTP: enable Google 2-Step Verification, create an App Password, then enter `smtp.gmail.com`, port `465`, the Gmail address as both SMTP username and sender address, and the App Password in **Supabase Dashboard → Authentication → SMTP Settings**. Keep the App Password private. The Gmail sender address will be visible to users; switch to a verified domain with an email provider such as Resend when you want branded mail.
+
+In **Supabase Dashboard → Authentication → URL Configuration**, set the Site URL to the production Vercel address and add these Redirect URLs:
+
+- `https://<production-vercel-host>/**`
+- `http://localhost:5173/**` (local development)
+- `com.rilsteel.maniapp://login-callback`
+- `com.rilsteel.maniapp://login-callback?mode=recovery`
+
+The web/PWA reset link opens the site where the request began; Android and iOS reset links return to the installed app.
+
 ## Git workflow
 
 See `.claude/skills/git-workflow/SKILL.md` for the branching model this repo

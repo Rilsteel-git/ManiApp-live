@@ -72,7 +72,7 @@ function AuthenticatedApp() {
 }
 
 export function App() {
-  const { session, loading } = useAuth();
+  const { session, loading, passwordRecovery } = useAuth();
 
   return (
     <>
@@ -80,7 +80,7 @@ export function App() {
       {loading ? <>
         <div inert><ShellFrame route={getRoute()}><PageSkeleton /></ShellFrame></div>
         <Loading />
-      </> : !session ? <AuthPage /> : (
+      </> : !session || passwordRecovery ? <AuthPage /> : (
         <AppDataProvider key={session.user.id}>
           <UiProvider>
             <AuthenticatedApp />
