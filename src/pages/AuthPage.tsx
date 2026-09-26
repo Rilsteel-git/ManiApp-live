@@ -5,15 +5,17 @@
    #/login dan #/register.
    ============================================================ */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Icon } from '../components/IconSprite';
 import { useFormErrors } from '../hooks/useFormErrors';
 
-type AuthRoute = 'login' | 'register';
+type AuthRoute = 'login' | 'register' | 'forgot-password' | 'reset-password';
 
 function getAuthRoute(): AuthRoute {
-  return window.location.hash.replace('#/', '') === 'register' ? 'register' : 'login';
+  const route = window.location.hash.replace('#/', '').split('?')[0];
+  if (route === 'register' || route === 'forgot-password' || route === 'reset-password') return route;
+  return 'login';
 }
 
 /** Input password dengan tombol lihat/sembunyikan. */
@@ -26,7 +28,8 @@ function PasswordField({
   placeholder,
   minLength,
   error,
-  hint
+  hint,
+  action
 }: {
   id: string;
   label: string;
@@ -37,11 +40,15 @@ function PasswordField({
   minLength?: number;
   error?: string;
   hint?: string;
+  action?: ReactNode;
 }) {
   const [visible, setVisible] = useState(false);
   return (
     <div className={`input${error ? ' error' : ''}`} data-field="password">
-      <label htmlFor={id}>{label}</label>
+      <div className="auth-field-heading">
+        <label htmlFor={id}>{label}</label>
+        {action}
+      </div>
       <div className="auth-password">
         <input
           id={id}
@@ -90,13 +97,23 @@ function validatePassword(value: string): string | null {
 }
 
 export function AuthPage() {
-  const { signIn, signUp, error: configError } = useAuth();
+  const {
+    signIn,
+    signUp,
+    passwordRecovery,
+    requestPasswordReset,
+    updatePassword,
+    cancelPasswordRecovery,
+    error: configError
+  } = useAuth();
   const [route, setRoute] = useState<AuthRoute>(getAuthRoute());
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [status, setStatus] = useState('');
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [passwordUpdated, setPasswordUpdated] = useState(false);
   const { errors, setErrors, clearError } = useFormErrors();
   const [busy, setBusy] = useState(false);
 
@@ -107,6 +124,8 @@ export function AuthPage() {
       setErrors({});
       setPassword('');
       setConfirm('');
+      setResetEmailSent(false);
+      setPasswordUpdated(false);
     };
     window.addEventListener('hashchange', update);
     return () => window.removeEventListener('hashchange', update);
@@ -121,9 +140,14 @@ export function AuthPage() {
     };
   }, []);
 
-  // Judul tab mengikuti app vanilla: "Log in · Mani App" / "Register · Mani App".
   useEffect(() => {
-    document.title = (route === 'login' ? 'Log in' : 'Register') + ' · Mani App';
+    const titles: Record<AuthRoute, string> = {
+      login: 'Log in',
+      register: 'Register',
+      'forgot-password': 'Forgot password',
+      'reset-password': 'Create new password'
+    };
+    document.title = `${titles[route]} · Mani App`;
   }, [route]);
 
   function showLoginAfterRegister(message: string) {
@@ -187,6 +211,47 @@ export function AuthPage() {
     }
   }
 
+  async function submitForgotPassword(event: React.FormEvent) {
+    event.preventDefault();
+    const emailError = validateEmail(email);
+    setErrors(emailError ? { email: emailError } : {});
+    if (emailError) return;
+
+    setStatus('');
+    setBusy(true);
+    try {
+      await requestPasswordReset(email.trim());
+      setResetEmailSent(true);
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : 'Could not send the reset link.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function submitNewPassword(event: React.FormEvent) {
+    event.preventDefault();
+    const next: Record<string, string> = {};
+    const passwordError = validatePassword(password);
+    if (passwordError) next.password = passwordError;
+    if (confirm !== password) next.confirm = 'Both passwords must match.';
+    setErrors(next);
+    if (Object.keys(next).length) return;
+
+    setStatus('');
+    setBusy(true);
+    try {
+      await updatePassword(password);
+      setPasswordUpdated(true);
+      setPassword('');
+      setConfirm('');
+    } catch (reason) {
+      setStatus(reason instanceof Error ? reason.message : 'Could not update your password.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <div className="auth-screen" id="auth-screen">
       <div className="auth-layout">
@@ -225,6 +290,7 @@ export function AuthPage() {
                 autoComplete="current-password"
                 placeholder="Enter your password"
                 error={errors.password}
+                action={<a className="auth-forgot-link" href="#/forgot-password">Forgot password?</a>}
               />
               <p className="auth-status" id="login-status" role="status" aria-live="polite">
                 {configError || status}
@@ -237,6 +303,108 @@ export function AuthPage() {
             <p className="auth-local-note">
               Your account is stored on the server, so the same email and password work on any device.
             </p>
+          </section>
+
+          <section className={`auth-panel${route === 'forgot-password' ? ' active' : ''}`} id="page-forgot-password" aria-labelledby="forgot-password-title">
+            {resetEmailSent ? (
+              <div className="auth-result" role="status" aria-live="polite">
+                <div className="auth-result-icon"><Icon name="mail" /></div>
+                <span className="auth-overline">CHECK YOUR INBOX</span>
+                <h1>Reset link sent</h1>
+                <p>If an account exists for <strong>{email.trim()}</strong>, you will receive a password reset link shortly.</p>
+                <a className="btn primary auth-submit" href="#/login">Back to log in <Icon name="arrow-right" /></a>
+                <button className="auth-text-button" type="button" disabled={busy} onClick={() => setResetEmailSent(false)}>Use another email</button>
+              </div>
+            ) : (
+              <>
+                <a className="auth-back" href="#/login"><Icon name="chevron-left" /> Back to log in</a>
+                <div className="auth-heading auth-heading-spaced">
+                  <span className="auth-overline">ACCOUNT RECOVERY</span>
+                  <h1 id="forgot-password-title">Forgot your password?</h1>
+                  <p>Enter the email linked to your Mani account. We will send you a secure reset link.</p>
+                </div>
+                <form className="auth-form" onSubmit={submitForgotPassword} noValidate>
+                  <div className={`input${errors.email ? ' error' : ''}`} data-field="email">
+                    <label htmlFor="forgot-email">Email address</label>
+                    <input
+                      id="forgot-email"
+                      type="email"
+                      autoComplete="email"
+                      inputMode="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(event) => { setEmail(event.target.value); clearError('email'); setStatus(''); }}
+                      required
+                      autoFocus
+                    />
+                    {errors.email && <small className="field-error">{errors.email}</small>}
+                  </div>
+                  <p className="auth-status" role="status" aria-live="polite">{configError || status}</p>
+                  <button className="btn primary auth-submit" type="submit" disabled={busy}>
+                    {busy ? 'Sending…' : <>Send reset link <Icon name="arrow-right" /></>}
+                  </button>
+                </form>
+                <p className="auth-security-note"><Icon name="lock" /> The link is private and expires automatically.</p>
+              </>
+            )}
+          </section>
+
+          <section className={`auth-panel${route === 'reset-password' ? ' active' : ''}`} id="page-reset-password" aria-labelledby="reset-password-title">
+            {passwordUpdated ? (
+              <div className="auth-result" role="status" aria-live="polite">
+                <div className="auth-result-icon success"><Icon name="check" /></div>
+                <span className="auth-overline">ALL SET</span>
+                <h1>Password updated</h1>
+                <p>Your password has been changed. Log in with the new password to continue.</p>
+                <a className="btn primary auth-submit" href="#/login">Log in to Mani <Icon name="arrow-right" /></a>
+              </div>
+            ) : passwordRecovery ? (
+              <>
+                <button className="auth-back auth-back-button" type="button" onClick={() => void cancelPasswordRecovery()}>
+                  <Icon name="chevron-left" /> Cancel
+                </button>
+                <div className="auth-heading auth-heading-spaced">
+                  <span className="auth-overline">SECURE YOUR ACCOUNT</span>
+                  <h1 id="reset-password-title">Create a new password</h1>
+                  <p>Choose a strong password you have not used for this account before.</p>
+                </div>
+                <form className="auth-form" onSubmit={submitNewPassword} noValidate>
+                  <PasswordField
+                    id="reset-new-password"
+                    label="New password"
+                    value={password}
+                    onChange={(value) => { setPassword(value); clearError('password', 'confirm'); setStatus(''); }}
+                    autoComplete="new-password"
+                    placeholder="Enter your new password"
+                    minLength={8}
+                    error={errors.password}
+                    hint={PASSWORD_HINT}
+                  />
+                  <PasswordField
+                    id="reset-confirm-password"
+                    label="Confirm new password"
+                    value={confirm}
+                    onChange={(value) => { setConfirm(value); clearError('confirm'); setStatus(''); }}
+                    autoComplete="new-password"
+                    placeholder="Enter it again"
+                    error={errors.confirm}
+                  />
+                  <p className="auth-status" role="status" aria-live="polite">{configError || status}</p>
+                  <button className="btn primary auth-submit" type="submit" disabled={busy}>
+                    {busy ? 'Updating…' : <>Change password <Icon name="arrow-right" /></>}
+                  </button>
+                </form>
+                <p className="auth-security-note"><Icon name="lock" /> Your password is updated through a secure Supabase session.</p>
+              </>
+            ) : (
+              <div className="auth-result" role="alert">
+                <div className="auth-result-icon warning"><Icon name="alert" /></div>
+                <span className="auth-overline">LINK UNAVAILABLE</span>
+                <h1>Reset link expired</h1>
+                <p>Request a new password reset link and open the latest email from Mani App.</p>
+                <a className="btn primary auth-submit" href="#/forgot-password">Request a new link <Icon name="arrow-right" /></a>
+              </div>
+            )}
           </section>
 
           <section className={`auth-panel${route === 'register' ? ' active' : ''}`} id="page-register" aria-labelledby="register-title">
